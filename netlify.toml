@@ -9,3 +9,12 @@
   for = "/_astro/*"
   [headers.values]
     Cache-Control = "public, max-age=31536000, immutable"
+
+# Технічний домен Netlify віддає той самий сайт, що й основний, — це дублі в пошуку.
+# Primary domain у налаштуваннях Netlify сам по собі редиректу не створює,
+# тому вішаємо його явно. Deploy-preview піддомени під шаблон не підпадають і працюють як були.
+[[redirects]]
+  from = "https://literatura-halyavka.netlify.app/*"
+  to = "https://literatura.halyavka.net/:splat"
+  status = 301
+  force = true
