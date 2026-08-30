@@ -1,0 +1,273 @@
+---
+import Base from '../../../layouts/Base.astro';
+import Breadcrumbs from '../../../components/Breadcrumbs.astro';
+import { NMT_WORKS, NMT_HEROES, NMT_LINES } from '../../../data/nmt';
+
+// Готуємо компактний набір даних для клієнта: тільки те, з чого будуються питання.
+const payload = {
+  works: NMT_WORKS.filter((w) => w.genre !== 'оглядова тема').map((w) => ({
+    t: w.title, a: w.author ?? null, g: w.genre, s: w.slug, n: w.note ?? null,
+  })),
+  heroes: NMT_HEROES.map((h) => ({ h: h.hero, t: h.title, a: h.author ?? null })),
+  lines: NMT_LINES.map((l) => ({ l: l.line, t: l.title, a: l.author ?? null })),
+};
+---
+
+<Base
+  title="Тренажер НМТ з української літератури — автор, жанр, герой, цитата"
+  description="Безкоштовний тренажер для підготовки до НМТ з української літератури: питання про автора, жанр, героїв і цитати. Питання генеруються щоразу нові."
+  noindex={false}
+>
+  <div class="mx-auto max-w-3xl px-4 py-8">
+    <Breadcrumbs items={[{ label: 'НМТ', href: '/nmt/' }, { label: 'Тренажер' }]} />
+
+    <h1 class="font-sans text-3xl font-extrabold tracking-tight text-heading sm:text-4xl">Тренажер</h1>
+    <p class="mt-2 max-w-reading font-serif text-lg text-muted">
+      Питання генеруються з програми НМТ щоразу заново, тож «вивчити порядок відповідей»
+      не вийде. Нічого не надсилається на сервер — усе рахується у твоєму браузері.
+    </p>
+
+    <div class="no-scrollbar mt-6 flex gap-2 overflow-x-auto pb-1" role="group" aria-label="Тип питань">
+      {[
+        ['all', 'Усе підряд'],
+        ['author', 'Автор'],
+        ['genre', 'Жанр'],
+        ['hero', 'Герой'],
+        ['line', 'Цитата'],
+      ].map(([mode, label], i) => (
+        <button
+          type="button" data-mode={mode}
+          class:list={[
+            'shrink-0 rounded-lg border px-3.5 py-2 font-sans text-sm font-semibold transition',
+            i === 0 ? 'border-brand bg-brand text-white' : 'border-line text-muted hover:border-brand/60 hover:text-heading',
+          ]}
+        >{label}</button>
+      ))}
+    </div>
+
+    <div class="mt-5 grid grid-cols-3 gap-2 font-sans">
+      {[
+        ['score', 'правильних'],
+        ['streak', 'поспіль'],
+        ['best', 'рекорд серії'],
+      ].map(([id, label]) => (
+        <div class="rounded-xl border border-line bg-surface px-3 py-2.5 text-center">
+          <p class="text-2xl font-extrabold text-brand" id={`stat-${id}`}>0</p>
+          <p class="mt-0.5 text-[0.7rem] text-muted">{label}</p>
+        </div>
+      ))}
+    </div>
+
+    <article class="mt-5 rounded-2xl border border-line bg-surface p-5" id="card">
+      <p class="font-sans text-xs font-semibold uppercase tracking-wide text-muted" id="q-kind">Питання</p>
+      <p class="mt-2 font-sans text-lg font-bold leading-snug text-heading" id="q-text">Готуємо питання…</p>
+      <div class="mt-4 space-y-2" id="q-options"></div>
+      <p class="mt-4 hidden rounded-lg bg-cream px-3 py-2.5 text-[0.93rem] leading-relaxed" id="q-explain"></p>
+      <div class="mt-4 flex items-center justify-between gap-3">
+        <button type="button" id="next-btn" class="hidden rounded-lg bg-brand px-4 py-2 font-sans text-sm font-semibold text-white transition hover:opacity-90">Наступне питання →</button>
+        <button type="button" id="reset-btn" class="ml-auto font-sans text-sm text-muted transition hover:text-brand">Скинути рахунок</button>
+      </div>
+    </article>
+
+    <p class="mt-6 font-sans text-sm text-muted">
+      Мало питань одного типу? Переключися на «Усе підряд» — так тренування ближче до
+      справжнього тесту, де типи завдань перемішані.
+      <a href="/nmt/tvory/" class="text-brand hover:underline">Повний перелік творів →</a>
+    </p>
+  </div>
+
+  <script is:inline set:html={`window.__NMT=${JSON.stringify(payload)}`} />
+</Base>
+
+<script>
+  type W = { t: string; a: string | null; g: string; s: string; n: string | null };
+  type H = { h: string; t: string; a: string | null };
+  type L = { l: string; t: string; a: string | null };
+  type Data = { works: W[]; heroes: H[]; lines: L[] };
+  type Mode = 'all' | 'author' | 'genre' | 'hero' | 'line';
+  type Question = { kind: string; text: string; options: string[]; answer: number; explain: string };
+
+  const BEST_KEY = 'nmt-best-streak';
+
+  function initTrainer() {
+    const data = (window as unknown as { __NMT?: Data }).__NMT;
+    const card = document.getElementById('card');
+    if (!data || !card || card.dataset.bound) return;
+    card.dataset.bound = '1';
+
+    const qKind = document.getElementById('q-kind')!;
+    const qText = document.getElementById('q-text')!;
+    const qOptions = document.getElementById('q-options')!;
+    const qExplain = document.getElementById('q-explain')!;
+    const nextBtn = document.getElementById('next-btn') as HTMLButtonElement;
+    const resetBtn = document.getElementById('reset-btn') as HTMLButtonElement;
+    const statScore = document.getElementById('stat-score')!;
+    const statStreak = document.getElementById('stat-streak')!;
+    const statBest = document.getElementById('stat-best')!;
+
+    let mode: Mode = 'all';
+    let asked = 0;
+    let correct = 0;
+    let streak = 0;
+    let best = 0;
+    try {
+      best = Number(localStorage.getItem(BEST_KEY) ?? 0) || 0;
+    } catch {
+      best = 0;
+    }
+    statBest.textContent = String(best);
+
+    const rand = <T,>(arr: T[]) => arr[Math.floor(Math.random() * arr.length)];
+    const shuffle = <T,>(arr: T[]) => arr.map((v) => [Math.random(), v] as const).sort((a, b) => a[0] - b[0]).map(([, v]) => v);
+
+    /** Варіанти: правильний + три відмінні від нього. */
+    const buildOptions = (right: string, pool: string[]) => {
+      const others = shuffle([...new Set(pool)].filter((v) => v !== right)).slice(0, 3);
+      return shuffle([right, ...others]);
+    };
+
+    const withAuthor = data.works.filter((w) => w.a);
+    const authors = withAuthor.map((w) => w.a!) as string[];
+    const genres = data.works.map((w) => w.g);
+    const titles = data.works.map((w) => w.t);
+
+    // Герой, що трапляється у двох творах (Мотря!), як питання не годиться —
+    // у нього дві правильні відповіді.
+    const heroCount = new Map<string, number>();
+    data.heroes.forEach((h) => heroCount.set(h.h, (heroCount.get(h.h) ?? 0) + 1));
+    const uniqueHeroes = data.heroes.filter((h) => heroCount.get(h.h) === 1);
+
+    const makers: Record<Exclude<Mode, 'all'>, () => Question> = {
+      author() {
+        const w = rand(withAuthor);
+        const right = w.a!;
+        const options = buildOptions(right, authors);
+        return {
+          kind: 'Автор твору',
+          text: `Хто написав «${w.t}»?`,
+          options,
+          answer: options.indexOf(right),
+          explain: `«${w.t}» — ${right}.${w.n ? ' ' + w.n : ''}`,
+        };
+      },
+      genre() {
+        const w = rand(data.works);
+        const options = buildOptions(w.g, genres);
+        return {
+          kind: 'Жанр твору',
+          text: `Який жанр має твір «${w.t}»?`,
+          options,
+          answer: options.indexOf(w.g),
+          explain: `«${w.t}»${w.a ? ` (${w.a})` : ''} — ${w.g}.`,
+        };
+      },
+      hero() {
+        const h = rand(uniqueHeroes);
+        const options = buildOptions(h.t, titles);
+        return {
+          kind: 'Хто з якого твору',
+          text: `З якого твору цей персонаж: ${h.h}?`,
+          options,
+          answer: options.indexOf(h.t),
+          explain: `${h.h} — «${h.t}»${h.a ? `, ${h.a}` : ''}.`,
+        };
+      },
+      line() {
+        const l = rand(data.lines);
+        const options = buildOptions(l.t, titles);
+        return {
+          kind: 'Упізнай за рядком',
+          text: `З якого твору рядок «${l.l}»?`,
+          options,
+          answer: options.indexOf(l.t),
+          explain: `«${l.l}» — «${l.t}»${l.a ? `, ${l.a}` : ''}.`,
+        };
+      },
+    };
+
+    const nextQuestion = () => {
+      const kinds: Exclude<Mode, 'all'>[] = mode === 'all' ? ['author', 'genre', 'hero', 'line'] : [mode];
+      const q = makers[rand(kinds)]();
+
+      qKind.textContent = q.kind;
+      qText.textContent = q.text;
+      qExplain.classList.add('hidden');
+      nextBtn.classList.add('hidden');
+      qOptions.innerHTML = '';
+
+      q.options.forEach((opt, i) => {
+        const btn = document.createElement('button');
+        btn.type = 'button';
+        btn.className =
+          'block w-full rounded-lg border border-line px-3.5 py-2.5 text-left text-[0.95rem] transition hover:border-brand/60';
+        btn.textContent = opt;
+        btn.addEventListener('click', () => {
+          if (qOptions.dataset.done) return;
+          qOptions.dataset.done = '1';
+          asked += 1;
+          const ok = i === q.answer;
+          if (ok) {
+            correct += 1;
+            streak += 1;
+            if (streak > best) {
+              best = streak;
+              try {
+                localStorage.setItem(BEST_KEY, String(best));
+              } catch {
+                /* приватний режим — просто не зберігаємо */
+              }
+            }
+          } else {
+            streak = 0;
+          }
+
+          [...qOptions.children].forEach((el, idx) => {
+            const b = el as HTMLButtonElement;
+            b.disabled = true;
+            if (idx === q.answer) b.classList.add('border-emerald-500', 'bg-emerald-500/10');
+            else if (idx === i) b.classList.add('border-red-500', 'bg-red-500/10');
+            else b.classList.add('opacity-60');
+          });
+
+          qExplain.textContent = q.explain;
+          qExplain.classList.remove('hidden');
+          nextBtn.classList.remove('hidden');
+          statScore.textContent = `${correct}/${asked}`;
+          statStreak.textContent = String(streak);
+          statBest.textContent = String(best);
+        });
+        qOptions.appendChild(btn);
+      });
+      delete qOptions.dataset.done;
+    };
+
+    nextBtn.addEventListener('click', nextQuestion);
+    resetBtn.addEventListener('click', () => {
+      asked = 0;
+      correct = 0;
+      streak = 0;
+      statScore.textContent = '0';
+      statStreak.textContent = '0';
+      nextQuestion();
+    });
+
+    document.querySelectorAll<HTMLButtonElement>('[data-mode]').forEach((btn) => {
+      btn.addEventListener('click', () => {
+        mode = btn.dataset.mode as Mode;
+        document.querySelectorAll<HTMLButtonElement>('[data-mode]').forEach((b) => {
+          const active = b === btn;
+          b.classList.toggle('border-brand', active);
+          b.classList.toggle('bg-brand', active);
+          b.classList.toggle('text-white', active);
+          b.classList.toggle('border-line', !active);
+          b.classList.toggle('text-muted', !active);
+        });
+        nextQuestion();
+      });
+    });
+
+    nextQuestion();
+  }
+  initTrainer();
+  document.addEventListener('astro:page-load', initTrainer);
+</script>

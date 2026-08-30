@@ -1,0 +1,69 @@
+---
+import Base from '../../layouts/Base.astro';
+import Breadcrumbs from '../../components/Breadcrumbs.astro';
+---
+
+<Base title="Пошук по сайту" description="Знайди твір, письменника або тему шкільного твору з української літератури." noindex>
+  <div class="mx-auto max-w-4xl px-4 py-8">
+    <Breadcrumbs items={[{ label: 'Пошук' }]} />
+    <h1 class="font-sans text-3xl font-extrabold tracking-tight text-heading">Пошук</h1>
+
+    <input
+      type="search" id="q" autocomplete="off" autofocus
+      placeholder="Назва твору, письменник або тема…"
+      class="mt-5 w-full rounded-xl border border-line bg-surface px-4 py-3 font-sans text-[0.98rem] outline-none transition focus:border-brand"
+    />
+
+    <p class="mt-3 font-sans text-sm text-muted" id="hint">Почни писати — знайдемо серед творів, письменників і тем.</p>
+    <ul class="mt-5 space-y-2" id="results"></ul>
+  </div>
+</Base>
+
+<script>
+  type Item = { t: string; s: string; u: string; k: string; c: number[] };
+
+  function initSearch() {
+    const input = document.getElementById('q') as HTMLInputElement | null;
+    const results = document.getElementById('results');
+    const hint = document.getElementById('hint');
+    if (!input || !results || input.dataset.bound) return;
+    input.dataset.bound = '1';
+
+    let index: Item[] = [];
+    const load = fetch('/search.json').then((r) => r.json()).then((d: Item[]) => (index = d));
+
+    // Латиниця → кирилиця не потрібна, але «і/ї/и» плутають часто — нормалізуємо
+    const norm = (s: string) => s.toLowerCase().replace(/[’'`]/g, '').replace(/[іїи]/g, 'и').replace(/[еє]/g, 'е');
+
+    const render = (q: string) => {
+      if (!q) {
+        results.innerHTML = '';
+        if (hint) hint.textContent = 'Почни писати — знайдемо серед творів, письменників і тем.';
+        return;
+      }
+      const nq = norm(q);
+      const hits = index
+        .filter((i) => norm(i.t).includes(nq) || norm(i.s).includes(nq))
+        .sort((a, b) => Number(norm(b.t).startsWith(nq)) - Number(norm(a.t).startsWith(nq)))
+        .slice(0, 40);
+
+      if (hint) hint.textContent = hits.length ? `Знайдено: ${hits.length}` : 'Нічого не знайшли — спробуй іншим словом.';
+      results.innerHTML = hits
+        .map(
+          (i) => `<li><a href="${i.u}" class="group flex items-baseline justify-between gap-3 rounded-lg border border-line bg-surface px-4 py-3 transition hover:border-brand/60">
+            <span><span class="font-sans text-[0.98rem] font-semibold text-heading group-hover:text-brand">${i.t}</span>
+            <span class="mt-0.5 block font-sans text-xs text-muted">${i.s}</span></span>
+            <span class="shrink-0 rounded-md bg-line/60 px-2 py-0.5 font-sans text-xs text-muted">${i.k}</span></a></li>`
+        )
+        .join('');
+    };
+
+    const params = new URLSearchParams(location.search);
+    const initial = params.get('q') ?? '';
+    if (initial) input.value = initial;
+    load.then(() => render(input.value.trim()));
+    input.addEventListener('input', () => render(input.value.trim()));
+  }
+  initSearch();
+  document.addEventListener('astro:page-load', initSearch);
+</script>

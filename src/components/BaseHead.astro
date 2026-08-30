@@ -1,0 +1,46 @@
+---
+import { SITE } from '../data/site';
+
+interface Props {
+  title: string;
+  description: string;
+  type?: 'website' | 'article';
+  noindex?: boolean;
+  jsonLd?: object | object[];
+}
+
+const { title, description, type = 'website', noindex = false, jsonLd } = Astro.props;
+const canonical = new URL(Astro.url.pathname, SITE.url);
+const jsonLdList = jsonLd ? (Array.isArray(jsonLd) ? jsonLd : [jsonLd]) : [];
+---
+
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>{title}</title>
+<meta name="description" content={description} />
+<link rel="canonical" href={canonical} />
+{noindex && <meta name="robots" content="noindex, nofollow" />}
+
+<link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+<meta name="theme-color" content="#003049" />
+<meta name="generator" content={Astro.generator} />
+<link rel="sitemap" href="/sitemap-index.xml" />
+
+<meta property="og:site_name" content={SITE.name} />
+<meta property="og:locale" content={SITE.locale} />
+<meta property="og:type" content={type} />
+<meta property="og:title" content={title} />
+<meta property="og:description" content={description} />
+<meta property="og:url" content={canonical} />
+<meta name="twitter:card" content="summary" />
+
+{jsonLdList.map((item) => <script type="application/ld+json" set:html={JSON.stringify(item)} />)}
+
+<!-- Тема застосовується до першого малювання, щоб не було спалаху білого -->
+<script is:inline>
+  (() => {
+    const saved = localStorage.getItem('lit-theme');
+    const dark = saved ? saved === 'dark' : matchMedia('(prefers-color-scheme: dark)').matches;
+    document.documentElement.classList.toggle('dark', dark);
+  })();
+</script>

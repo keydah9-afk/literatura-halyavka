@@ -1,0 +1,32 @@
+---
+import { SITE, CLASSES } from '../data/site';
+const year = new Date().getFullYear();
+---
+
+<footer class="no-print mt-20 border-t border-line bg-surface">
+  <div class="mx-auto grid max-w-6xl gap-8 px-4 py-10 font-sans text-sm sm:grid-cols-3">
+    <div>
+      <p class="mb-2 font-bold text-heading">{SITE.name}</p>
+      <p class="text-muted">Короткі перекази, аналіз творів і готові шкільні твори з української літератури. Матеріали для підготовки до уроку — читати сам твір вони не замінюють.</p>
+    </div>
+    <div>
+      <p class="mb-2 font-bold text-heading">Класи</p>
+      <ul class="flex flex-wrap gap-x-3 gap-y-1 text-muted">
+        {CLASSES.map((k) => <li><a class="hover:text-brand" href={`/${k}-klas/`}>{k} клас</a></li>)}
+      </ul>
+    </div>
+    <div>
+      <p class="mb-2 font-bold text-heading">Розділи</p>
+      <ul class="space-y-1 text-muted">
+        <li><a class="hover:text-brand" href="/pysmennyky/">Письменники</a></li>
+        <li><a class="hover:text-brand" href="/tvir-na-temu/">Шкільні твори</a></li>
+        <li><a class="hover:text-brand" href="/napamyat/">Вивчити напам’ять</a></li>
+        <li><a class="hover:text-brand" href="/nmt/">Підготовка до НМТ</a></li>
+        <li><a class="hover:text-brand" href="/nmt/trenazher/">Тренажер НМТ</a></li>
+        <li><a class="hover:text-brand" href="/teoriya/">Теорія літератури</a></li>
+        <li><a class="hover:text-brand" href={SITE.mainSite.url}>{SITE.mainSite.name}</a></li>
+      </ul>
+    </div>
+  </div>
+  <div class="border-t border-line py-4 text-center font-sans text-xs text-muted">© {year} {SITE.name}</div>
+</footer>

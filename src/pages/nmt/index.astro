@@ -1,0 +1,150 @@
+---
+import Base from '../../layouts/Base.astro';
+import Breadcrumbs from '../../components/Breadcrumbs.astro';
+import Callout from '../../components/Callout.astro';
+import { NMT_META, NMT_REAL_WORKS, NMT_BY_SECTION, NMT_HEROES, NMT_LINES } from '../../data/nmt';
+import { readyWorkSlugs } from '../../lib/content';
+import { TERMS } from '../../data/terms';
+
+const ready = await readyWorkSlugs();
+const done = NMT_REAL_WORKS.filter((w) => ready.has(w.slug)).length;
+
+const sections = [
+  { href: '/nmt/tvory/', title: 'Усі твори НМТ', icon: '📚',
+    text: `Повний перелік із ${NMT_REAL_WORKS.length} творів за розділами програми — з автором, жанром, роком і тим, що треба пам’ятати про кожен.` },
+  { href: '/nmt/heroyi/', title: 'Хто з якого твору', icon: '👥',
+    text: `${NMT_HEROES.length} героїв із прив’язкою до твору й автора. Саме на цьому будують завдання на відповідність.` },
+  { href: '/nmt/vyslovy/', title: 'Рядки, за якими впізнають твір', icon: '💬',
+    text: `${NMT_LINES.length} крилатих рядків. У тесті часто дають цитату — і треба назвати твір або автора.` },
+  { href: '/nmt/trenazher/', title: 'Тренажер', icon: '⚡',
+    text: 'Нескінченні питання чотирьох типів: автор, жанр, герой, цитата. Питання генеруються щоразу нові.' },
+  { href: '/teoriya/', title: 'Теорія літератури', icon: '🧩',
+    text: `${TERMS.length} термінів з прикладами саме з тих творів, що є в програмі НМТ.` },
+];
+
+const jsonLd = {
+  '@context': 'https://schema.org',
+  '@type': 'FAQPage',
+  mainEntity: [
+    {
+      '@type': 'Question',
+      name: 'Скільки завдань у НМТ з української літератури?',
+      acceptedAnswer: {
+        '@type': 'Answer',
+        text: `${NMT_META.tasks} завдань: ${NMT_META.tasksChoice} з вибором однієї правильної відповіді та ${NMT_META.tasksMatch} на встановлення відповідності.`,
+      },
+    },
+    {
+      '@type': 'Question',
+      name: 'Скільки творів треба знати для НМТ з української літератури?',
+      acceptedAnswer: {
+        '@type': 'Answer',
+        text: `${NMT_REAL_WORKS.length} творів — від усної народної творчості до сучасного літературного процесу. Це менше, ніж у шкільній програмі.`,
+      },
+    },
+    {
+      '@type': 'Question',
+      name: 'Чи обовʼязкова українська література на НМТ?',
+      acceptedAnswer: {
+        '@type': 'Answer',
+        text: 'Ні. Українська література — один із предметів на вибір, який складають четвертим блоком після української мови, математики та історії України.',
+      },
+    },
+  ],
+};
+---
+
+<Base
+  title="НМТ з української літератури — усі твори, формат тесту й тренажер"
+  description={`Підготовка до НМТ з української літератури: ${NMT_REAL_WORKS.length} творів програми, герої, крилаті рядки, теорія і тренажер. Формат тесту — ${NMT_META.tasks} завдань.`}
+  {jsonLd}
+>
+  <div class="mx-auto max-w-4xl px-4 py-8">
+    <Breadcrumbs items={[{ label: 'НМТ' }]} />
+
+    <h1 class="font-sans text-3xl font-extrabold tracking-tight text-heading sm:text-4xl">
+      НМТ з української літератури
+    </h1>
+    <p class="mt-3 max-w-reading font-serif text-lg leading-relaxed">
+      Українська література — предмет на вибір: його складають четвертим блоком після
+      української мови, математики та історії України. Хороша новина в тому, що список
+      творів тут менший за шкільну програму й повністю відомий заздалегідь.
+    </p>
+
+    <div class="mt-6 grid gap-3 sm:grid-cols-3">
+      {[
+        [NMT_META.tasks, 'завдань у блоці'],
+        [NMT_REAL_WORKS.length, 'творів у програмі'],
+        [NMT_META.threshold, 'бал — поріг «склав»'],
+      ].map(([n, label]) => (
+        <div class="rounded-xl border border-line bg-surface px-4 py-3 text-center">
+          <p class="font-sans text-3xl font-extrabold text-brand">{n}</p>
+          <p class="mt-0.5 font-sans text-xs text-muted">{label}</p>
+        </div>
+      ))}
+    </div>
+
+    <Callout tone="info" title="Формат блоку">
+      <ul class="ml-4 list-disc space-y-1">
+        <li><strong>{NMT_META.tasksChoice} завдань</strong> з вибором однієї правильної відповіді з чотирьох.</li>
+        <li><strong>{NMT_META.tasksMatch} завдань</strong> на встановлення відповідності — «логічні пари»: автор — твір, герой — твір, цитата — твір.</li>
+        <li>Поріг у <strong>{NMT_META.threshold} балів</strong> дає 100 за шкалою 100–200.</li>
+        <li>Власного висловлення (твору-роздуму) у НМТ немає — тільки тестові завдання.</li>
+      </ul>
+    </Callout>
+
+    <h2 class="mt-10 font-sans text-2xl font-bold text-heading">З чого складається підготовка</h2>
+    <div class="mt-4 space-y-2">
+      {sections.map((s) => (
+        <a href={s.href} class="group flex items-start gap-3 rounded-xl border border-line bg-surface px-4 py-3.5 transition hover:border-brand/60">
+          <span class="text-xl" aria-hidden="true">{s.icon}</span>
+          <span>
+            <span class="font-sans text-[0.98rem] font-bold text-heading group-hover:text-brand">{s.title}</span>
+            <span class="mt-0.5 block text-[0.93rem] leading-relaxed text-muted">{s.text}</span>
+          </span>
+        </a>
+      ))}
+    </div>
+
+    <h2 class="mt-10 font-sans text-2xl font-bold text-heading">Як готуватися, щоб не потонути</h2>
+    <div class="prose-reading mt-3">
+      <p>
+        Головна помилка — читати все підряд від фольклору до Костенко. Тест перевіряє
+        не глибину переживання, а <strong>впізнавання</strong>: за героєм, за цитатою,
+        за жанром, за роком. Тому вчити варто «сіткою», а не суцільним текстом.
+      </p>
+      <p>Порядок, який економить найбільше часу:</p>
+      <ol>
+        <li><strong>Спочатку сітка.</strong> Пройди перелік творів і для кожного запам’ятай чотири речі: автор, жанр, доба, один головний герой. Це вже половина балів.</li>
+        <li><strong>Потім герої.</strong> Завдання на відповідність майже завжди про них. Достатньо знати, хто з якого твору, — характеристики тут не питають.</li>
+        <li><strong>Далі цитати.</strong> Рядків, які реально трапляються, небагато — їх можна вивчити за кілька вечорів.</li>
+        <li><strong>Теорія — в кінці.</strong> Терміни легше запам’ятовуються, коли ти вже знаєш твори, на яких їх показують.</li>
+        <li><strong>Сюжети — точково.</strong> Докладний переказ потрібен лише для великих текстів: «Кайдашева сім’я», «Чорна рада», «Місто», «Тигролови», «Маруся Чурай», «Лісова пісня».</li>
+      </ol>
+    </div>
+
+    <Callout tone="key" title="Що дає найбільше балів за найменший час" icon="🎯">
+      Пари «автор — твір» і «герой — твір». Це п’ять завдань на відповідність, тобто
+      найдорожча частина тесту, і водночас найпростіша для механічного запам’ятовування.
+      Починай з <a href="/nmt/trenazher/" class="text-brand underline">тренажера</a>, а не з читання.
+    </Callout>
+
+    <h2 class="mt-10 font-sans text-2xl font-bold text-heading">Розділи програми</h2>
+    <ul class="mt-3 space-y-2">
+      {NMT_BY_SECTION.map((s) => (
+        <li class="flex items-baseline justify-between gap-3 rounded-lg border border-line bg-surface px-4 py-3">
+          <a href="/nmt/tvory/" class="font-sans text-[0.95rem] font-semibold text-heading hover:text-brand">{s.section}</a>
+          <span class="shrink-0 font-sans text-xs text-muted">{s.works.length}</span>
+        </li>
+      ))}
+    </ul>
+
+    <p class="mt-8 font-sans text-sm text-muted">
+      Розборів творів НМТ на сайті готово: {done} з {NMT_REAL_WORKS.length}. Джерела про формат тесту —
+      {NMT_META.sources.map((s, i) => (
+        <>{i > 0 ? ', ' : ' '}<a href={s.url} rel="nofollow noopener" target="_blank" class="text-brand hover:underline">{s.title}</a></>
+      ))}.
+      Формат НМТ час від часу змінюють, тож перед реєстрацією перевіряй актуальні умови на офіційних ресурсах.
+    </p>
+  </div>
+</Base>

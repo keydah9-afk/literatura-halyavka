@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://literatura.halyavka.net/sitemap-index.xml

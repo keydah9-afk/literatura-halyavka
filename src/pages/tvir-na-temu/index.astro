@@ -1,0 +1,47 @@
+---
+import Base from '../../layouts/Base.astro';
+import Breadcrumbs from '../../components/Breadcrumbs.astro';
+import { getEssays, plural } from '../../lib/content';
+import { CLASSES } from '../../data/site';
+
+const essays = await getEssays();
+const byClass = CLASSES.map((k) => ({
+  klas: k,
+  items: essays.filter((e) => e.data.classes.includes(k)).sort((a, b) => a.data.workTitle.localeCompare(b.data.workTitle, 'uk')),
+})).filter((g) => g.items.length);
+---
+
+<Base
+  title="Шкільні твори з української літератури 5–11 клас — готові варіанти"
+  description="Готові твори з української літератури: план, цитати і кілька варіантів на кожну тему. 5–11 клас."
+>
+  <div class="mx-auto max-w-4xl px-4 py-8">
+    <Breadcrumbs items={[{ label: 'Шкільні твори' }]} />
+    <h1 class="font-sans text-3xl font-extrabold tracking-tight text-heading sm:text-4xl">Шкільні твори</h1>
+    <p class="mt-2 max-w-reading font-serif text-lg text-muted">
+      На кожній сторінці — головна думка, план, цитати і кілька готових варіантів різного обсягу.
+      Усього {essays.length} {plural(essays.length, ['тема', 'теми', 'тем'])}.
+    </p>
+
+    {byClass.map((g) => (
+      <section class="mt-8">
+        <h2 class="mb-3 font-sans text-xl font-bold text-heading">{g.klas} клас</h2>
+        <ul class="space-y-2">
+          {g.items.map((e) => (
+            <li>
+              <a href={`/tvir-na-temu/${e.id}/`} class="group flex items-baseline justify-between gap-3 rounded-lg border border-line bg-surface px-4 py-3 transition hover:border-brand/60">
+                <span>
+                  <span class="font-sans text-[0.98rem] font-semibold text-heading group-hover:text-brand">{e.data.title}</span>
+                  <span class="mt-0.5 block font-sans text-xs text-muted">{e.data.workTitle}{e.data.author ? ` · ${e.data.author}` : ''}</span>
+                </span>
+                <span class="shrink-0 rounded-md bg-line/60 px-2 py-0.5 font-sans text-xs text-muted">{e.data.variants.length}</span>
+              </a>
+            </li>
+          ))}
+        </ul>
+      </section>
+    ))}
+
+    {essays.length === 0 && <p class="mt-8 text-muted">Твори з’являться найближчим часом.</p>}
+  </div>
+</Base>

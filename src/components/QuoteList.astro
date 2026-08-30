@@ -1,0 +1,15 @@
+---
+interface Props { quotes: { text: string; note?: string }[]; id?: string; title?: string }
+const { quotes, id = 'tsytaty', title = 'Цитати для твору' } = Astro.props;
+---
+<section id={id}>
+  <h2 class="mb-3 font-sans text-2xl font-bold text-heading">{title}</h2>
+  <ul class="space-y-3">
+    {quotes.map((q) => (
+      <li class="rounded-xl border-l-[3px] border-brand bg-surface px-4 py-3">
+        <p class="font-serif text-[1.02rem] italic leading-relaxed">«{q.text}»</p>
+        {q.note && <p class="mt-1.5 font-sans text-xs text-muted">{q.note}</p>}
+      </li>
+    ))}
+  </ul>
+</section>

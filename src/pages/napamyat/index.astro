@@ -1,0 +1,50 @@
+---
+import Base from '../../layouts/Base.astro';
+import Breadcrumbs from '../../components/Breadcrumbs.astro';
+import Callout from '../../components/Callout.astro';
+import { BY_HEART } from '../../data/program';
+import { readyWorkSlugs } from '../../lib/content';
+import { CLASSES } from '../../data/site';
+
+const ready = await readyWorkSlugs();
+const byClass = CLASSES.map((k) => ({ klas: k, items: BY_HEART.filter((w) => w.klas === k) })).filter((g) => g.items.length);
+---
+
+<Base
+  title="Вірші напам’ять з української літератури 5–11 клас — повний список"
+  description="Що треба вивчити напам’ять з української літератури в кожному класі: повний список творів за програмою з посиланнями на тексти."
+>
+  <div class="mx-auto max-w-4xl px-4 py-8">
+    <Breadcrumbs items={[{ label: 'Напам’ять' }]} />
+    <h1 class="font-sans text-3xl font-extrabold tracking-tight text-heading sm:text-4xl">Вивчити напам’ять</h1>
+    <p class="mt-2 max-w-reading font-serif text-lg text-muted">
+      Список творів, які за програмою читають напам’ять. Точний перелік учитель може змінити —
+      уточни в класі, але цей набір збігається з програмою в більшості шкіл.
+    </p>
+
+    {byClass.map((g) => (
+      <section class="mt-8">
+        <h2 class="mb-3 font-sans text-xl font-bold text-heading">{g.klas} клас</h2>
+        <ul class="space-y-2">
+          {g.items.map((w) => (
+            <li class="rounded-lg border border-line bg-surface px-4 py-3">
+              {ready.has(w.slug) ? (
+                <a href={`/tvory/${w.slug}/`} class="font-sans text-[0.98rem] font-semibold text-heading hover:text-brand">{w.title}</a>
+              ) : (
+                <span class="font-sans text-[0.98rem] font-semibold text-muted">{w.title}</span>
+              )}
+              {w.author && <span class="ml-2 font-sans text-sm text-muted">{w.author}</span>}
+              {w.note && <span class="mt-0.5 block font-sans text-xs text-muted">{w.note}</span>}
+            </li>
+          ))}
+        </ul>
+      </section>
+    ))}
+
+    <Callout tone="key" title="Як вивчити вірш швидше" icon="🧠">
+      Розбий текст на строфи й учи по одній, але щоразу повторюй усе з початку. Перед сном прочитай двічі вголос —
+      уночі мозок «докладає» вивчене в довгу пам’ять. І обов’язково зрозумій, про що вірш: осмислений текст
+      запам’ятовується у 3–4 рази швидше за набір рядків.
+    </Callout>
+  </div>
+</Base>

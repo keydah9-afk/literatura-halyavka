@@ -1,0 +1,140 @@
+@import 'tailwindcss';
+@plugin '@tailwindcss/typography';
+
+/* Темна тема перемикачем (клас .dark на <html>), а не лише системна */
+@custom-variant dark (&:where(.dark, .dark *));
+
+@theme {
+  /* Бренд Халявки: червоний, темно-синій, кремовий */
+  --color-brand: #c1121f;
+  --color-brand-soft: #e8434f;
+  --color-ink: #003049;
+  --color-cream: #fdf0d5;
+
+  /* Поверхні та текст — світла тема (перевизначаються нижче для .dark) */
+  --color-paper: #fbf8f3; /* фон сторінки — тепла «слонова кістка», не чисто білий */
+  --color-surface: #ffffff; /* картки, інфобокси */
+  --color-line: #e7e0d5; /* лінії та рамки */
+  --color-body: #2f3337; /* основний текст — темно-сірий, не чорний */
+  --color-muted: #6b7280;
+  --color-heading: #003049;
+
+  --font-sans: 'Inter Variable', ui-sans-serif, system-ui, sans-serif;
+  --font-serif: 'Lora', Georgia, 'Times New Roman', serif;
+
+  /* Комфортна ширина читання: 60–75 символів у рядку */
+  --container-reading: 44rem;
+}
+
+.dark {
+  --color-paper: #10171d;
+  --color-surface: #16202a;
+  --color-line: #2a3844;
+  --color-body: #cdd6de;
+  --color-muted: #8b9aa8;
+  --color-heading: #e8eef3;
+  --color-cream: #1d2a24;
+  --color-brand: #ff6b6b;
+  --color-brand-soft: #ff8f8f;
+}
+
+@view-transition {
+  navigation: auto;
+}
+
+html {
+  scroll-behavior: smooth;
+  scroll-padding-top: 5rem; /* щоб якірні посилання не ховались під шапкою */
+  -webkit-tap-highlight-color: transparent;
+}
+
+body {
+  background-color: var(--color-paper);
+  color: var(--color-body);
+}
+
+/* Читальний текст: серифний шрифт, крупний кегль, просторий інтерліньяж */
+.prose-reading {
+  font-family: var(--font-serif);
+  font-size: 1.125rem;
+  line-height: 1.7;
+}
+@media (min-width: 768px) {
+  .prose-reading {
+    font-size: 1.1875rem;
+  }
+}
+
+.prose-reading h2,
+.prose-reading h3,
+.prose-reading h4 {
+  font-family: var(--font-sans);
+  color: var(--color-heading);
+  font-weight: 700;
+  letter-spacing: -0.01em;
+}
+.prose-reading h2 {
+  font-size: 1.5rem;
+  margin-top: 2.5rem;
+  margin-bottom: 0.75rem;
+  scroll-margin-top: 5rem;
+}
+.prose-reading h3 {
+  font-size: 1.2rem;
+  margin-top: 1.75rem;
+  margin-bottom: 0.5rem;
+  scroll-margin-top: 5rem;
+}
+.prose-reading p {
+  margin-bottom: 1.15rem;
+}
+.prose-reading ul,
+.prose-reading ol {
+  margin: 0 0 1.15rem 1.25rem;
+}
+.prose-reading ul {
+  list-style: disc;
+}
+.prose-reading ol {
+  list-style: decimal;
+}
+.prose-reading li {
+  margin-bottom: 0.4rem;
+  padding-left: 0.25rem;
+}
+.prose-reading a {
+  color: var(--color-brand);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+.prose-reading strong {
+  color: var(--color-heading);
+  font-weight: 600;
+}
+/* Цитата з твору — вертикальна лінія + курсив */
+.prose-reading blockquote {
+  border-left: 3px solid var(--color-brand);
+  padding: 0.15rem 0 0.15rem 1rem;
+  margin: 1.5rem 0;
+  font-style: italic;
+  color: var(--color-muted);
+}
+.prose-reading hr {
+  border: 0;
+  border-top: 1px solid var(--color-line);
+  margin: 2rem 0;
+}
+
+/* Плавна поява при перемиканні теми не потрібна — уникаємо миготіння */
+.no-scrollbar {
+  scrollbar-width: none;
+}
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+
+@media print {
+  .no-print {
+    display: none !important;
+  }
+}

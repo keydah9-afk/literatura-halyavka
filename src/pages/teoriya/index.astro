@@ -1,0 +1,67 @@
+---
+import Base from '../../layouts/Base.astro';
+import Breadcrumbs from '../../components/Breadcrumbs.astro';
+import { TERMS, TERM_GROUPS } from '../../data/terms';
+---
+
+<Base
+  title="Теорія літератури — словник термінів для школи й НМТ"
+  description="Літературознавчі терміни простими словами: тропи, стилістичні фігури, віршові розміри, жанри, напрями. З прикладами зі шкільної програми."
+>
+  <div class="mx-auto max-w-4xl px-4 py-8">
+    <Breadcrumbs items={[{ label: 'Теорія літератури' }]} />
+    <h1 class="font-sans text-3xl font-extrabold tracking-tight text-heading sm:text-4xl">Теорія літератури</h1>
+    <p class="mt-2 max-w-reading font-serif text-lg text-muted">
+      {TERMS.length} термінів простими словами й з прикладами саме зі шкільної програми —
+      щоб не вчити означення окремо від творів.
+    </p>
+
+    <input
+      type="search" id="term-filter" placeholder="Почни писати: метафора, ямб, новела…"
+      class="mt-6 w-full rounded-xl border border-line bg-surface px-4 py-3 font-sans text-[0.98rem] outline-none transition focus:border-brand"
+    />
+
+    {TERM_GROUPS.map((group) => (
+      <section class="mt-8" data-group={group}>
+        <h2 class="mb-3 font-sans text-xl font-bold text-heading">{group}</h2>
+        <dl class="divide-y divide-line overflow-hidden rounded-xl border border-line bg-surface">
+          {TERMS.filter((t) => t.group === group).map((t) => (
+            <div class="px-4 py-3" data-term={`${t.term} ${t.definition}`.toLowerCase()}>
+              <dt class="font-sans text-[0.98rem] font-bold text-heading">{t.term}</dt>
+              <dd class="mt-0.5 text-[0.95rem] leading-relaxed">{t.definition}</dd>
+              {t.example && <dd class="mt-1 font-serif text-[0.92rem] italic text-muted">{t.example}</dd>}
+            </div>
+          ))}
+        </dl>
+      </section>
+    ))}
+    <p class="mt-6 hidden font-sans text-muted" id="term-empty">Нічого не знайшли. Спробуй іншим словом.</p>
+  </div>
+</Base>
+
+<script>
+  function initTermFilter() {
+    const input = document.getElementById('term-filter') as HTMLInputElement | null;
+    if (!input || input.dataset.bound) return;
+    input.dataset.bound = '1';
+    const items = [...document.querySelectorAll<HTMLElement>('[data-term]')];
+    const groups = [...document.querySelectorAll<HTMLElement>('[data-group]')];
+    const empty = document.getElementById('term-empty');
+
+    input.addEventListener('input', () => {
+      const q = input.value.trim().toLowerCase();
+      let found = 0;
+      items.forEach((el) => {
+        const hit = !q || el.dataset.term!.includes(q);
+        el.hidden = !hit;
+        if (hit) found += 1;
+      });
+      groups.forEach((g) => {
+        g.hidden = ![...g.querySelectorAll<HTMLElement>('[data-term]')].some((el) => !el.hidden);
+      });
+      empty?.classList.toggle('hidden', found > 0);
+    });
+  }
+  initTermFilter();
+  document.addEventListener('astro:page-load', initTermFilter);
+</script>

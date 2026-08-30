@@ -1,0 +1,133 @@
+---
+import { render } from 'astro:content';
+import Base from '../../layouts/Base.astro';
+import Breadcrumbs from '../../components/Breadcrumbs.astro';
+import Toc from '../../components/Toc.astro';
+import Callout from '../../components/Callout.astro';
+import Passport from '../../components/Passport.astro';
+import Characters from '../../components/Characters.astro';
+import QuoteList from '../../components/QuoteList.astro';
+import Quiz from '../../components/Quiz.astro';
+import Tag from '../../components/Tag.astro';
+import { getWorks, getEssays, essaysForWork, readyAuthorSlugs } from '../../lib/content';
+import { SITE } from '../../data/site';
+
+export async function getStaticPaths() {
+  const works = await getWorks();
+  return works.map((work) => ({ params: { slug: work.id }, props: { work } }));
+}
+
+const { work } = Astro.props;
+const d = work.data;
+const { Content, headings } = await render(work);
+const essays = essaysForWork(await getEssays(), work.id);
+const authorPageExists = !!d.authorSlug && (await readyAuthorSlugs()).has(d.authorSlug);
+
+const mdHeadings = headings.filter((h) => h.depth === 2).map((h) => ({ id: h.slug, text: h.text }));
+const toc = [
+  { id: 'korotko', text: 'Дуже коротко' },
+  { id: 'pasport', text: 'Паспорт твору' },
+  ...mdHeadings,
+  ...(d.characters.length ? [{ id: 'heroyi', text: 'Головні герої' }] : []),
+  ...(d.quotes.length ? [{ id: 'tsytaty', text: 'Цитати' }] : []),
+  ...(d.devices.length ? [{ id: 'zasoby', text: 'Художні засоби' }] : []),
+  ...(d.plan.length ? [{ id: 'plan', text: 'План твору' }] : []),
+  ...(essays.length ? [{ id: 'tvory-temy', text: 'Теми творів' }] : []),
+  ...(d.quiz.length ? [{ id: 'test', text: 'Перевір себе' }] : []),
+];
+
+const title = `${d.title}${d.author ? ` — ${d.author}` : ''}: короткий зміст і аналіз`;
+const description = d.description ?? `${d.veryShort.slice(0, 150)}…`;
+const jsonLd = {
+  '@context': 'https://schema.org',
+  '@type': 'Article',
+  headline: title,
+  description,
+  inLanguage: 'uk',
+  datePublished: d.date.toISOString(),
+  dateModified: (d.updatedDate ?? d.date).toISOString(),
+  about: { '@type': 'CreativeWork', name: d.title, author: d.author },
+  publisher: { '@type': 'Organization', name: SITE.name },
+};
+---
+
+<Base {title} {description} type="article" {jsonLd}>
+  <div class="mx-auto grid max-w-6xl gap-10 px-4 py-8 lg:grid-cols-[1fr_15rem]">
+    <article class="min-w-0 max-w-reading">
+      <Breadcrumbs items={[{ label: `${d.classes[0]} клас`, href: `/${d.classes[0]}-klas/` }, { label: d.title }]} />
+
+      <h1 class="font-sans text-3xl font-extrabold leading-tight tracking-tight text-heading sm:text-4xl">{d.title}</h1>
+      {d.author && (
+        <p class="mt-1.5 font-sans text-base text-muted">
+          {authorPageExists ? <a href={`/pysmennyky/${d.authorSlug}/`} class="hover:text-brand">{d.author}</a> : d.author}
+        </p>
+      )}
+      <div class="mt-3 flex flex-wrap gap-1.5">
+        <Tag tone="brand">{d.passport.genre}</Tag>
+        {d.classes.map((k) => <Tag tone="ink" href={`/${k}-klas/`}>{k} клас</Tag>)}
+        {d.byHeart && <Tag>напам’ять</Tag>}
+      </div>
+
+      <Callout tone="key" title="Якщо часу зовсім немає" icon="⏱">
+        <p id="korotko" class="scroll-mt-20">{d.veryShort}</p>
+      </Callout>
+
+      <Passport passport={d.passport} author={d.author} />
+
+      <div class="prose-reading"><Content /></div>
+
+      <div class="mt-10 space-y-10">
+        {d.characters.length > 0 && <Characters characters={d.characters} />}
+        {d.quotes.length > 0 && <QuoteList quotes={d.quotes} />}
+
+        {d.devices.length > 0 && (
+          <section id="zasoby">
+            <h2 class="mb-3 font-sans text-2xl font-bold text-heading">Художні засоби</h2>
+            <dl class="divide-y divide-line overflow-hidden rounded-xl border border-line bg-surface">
+              {d.devices.map((dev) => (
+                <div class="grid gap-1 px-4 py-2.5 sm:grid-cols-[10rem_1fr] sm:gap-4">
+                  <dt class="font-sans text-sm font-semibold text-heading">{dev.term}</dt>
+                  <dd class="font-serif text-[0.98rem] italic text-muted">{dev.example}</dd>
+                </div>
+              ))}
+            </dl>
+          </section>
+        )}
+
+        {d.plan.length > 0 && (
+          <section id="plan">
+            <h2 class="mb-3 font-sans text-2xl font-bold text-heading">План твору</h2>
+            <ol class="list-decimal space-y-1.5 rounded-xl border border-line bg-surface py-4 pl-9 pr-4 text-[0.98rem]">
+              {d.plan.map((p) => <li>{p}</li>)}
+            </ol>
+          </section>
+        )}
+
+        {essays.length > 0 && (
+          <section id="tvory-temy">
+            <h2 class="mb-1 font-sans text-2xl font-bold text-heading">Теми творів за цим текстом</h2>
+            <p class="mb-3 font-sans text-sm text-muted">На кожній сторінці — план, цитати і {SITE.essayVariants} готові варіанти.</p>
+            <ul class="space-y-2">
+              {essays.map((e) => (
+                <li>
+                  <a href={`/tvir-na-temu/${e.id}/`} class="group flex items-center justify-between gap-3 rounded-lg border border-line bg-surface px-4 py-3 transition hover:border-brand/60">
+                    <span class="font-sans text-[0.95rem] font-medium text-heading group-hover:text-brand">«{e.data.title}»</span>
+                    <span class="shrink-0 rounded-md bg-line/60 px-2 py-0.5 font-sans text-xs text-muted">{e.data.variants.length} варіанти</span>
+                  </a>
+                </li>
+              ))}
+            </ul>
+          </section>
+        )}
+
+        {d.quiz.length > 0 && <Quiz quiz={d.quiz} />}
+      </div>
+
+      <Callout tone="info" title="Чесно кажучи">
+        Переказ — це підказка, а не заміна книжці. На уроці одразу видно того, хто читав: у нього є свої улюблені сцени й запитання до автора. Використай цю сторінку, щоб швидко пригадати сюжет — а сам твір усе-таки відкрий.
+      </Callout>
+    </article>
+
+    <aside><Toc items={toc} /></aside>
+  </div>
+</Base>

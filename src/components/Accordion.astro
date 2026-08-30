@@ -1,0 +1,11 @@
+---
+interface Props { summary: string; hint?: string; open?: boolean }
+const { summary, hint, open = false } = Astro.props;
+---
+<details class="group my-3 overflow-hidden rounded-xl border border-line bg-surface" open={open}>
+  <summary class="flex cursor-pointer list-none items-center justify-between gap-3 px-4 py-3 font-sans text-[0.95rem] font-semibold text-heading">
+    <span>{summary}{hint && <span class="ml-2 font-normal text-muted">{hint}</span>}</span>
+    <svg class="h-4 w-4 shrink-0 text-muted transition group-open:rotate-180" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m6 9 6 6 6-6" /></svg>
+  </summary>
+  <div class="border-t border-line px-4 py-4"><slot /></div>
+</details>

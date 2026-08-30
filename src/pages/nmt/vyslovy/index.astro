@@ -1,0 +1,81 @@
+---
+import Base from '../../../layouts/Base.astro';
+import Breadcrumbs from '../../../components/Breadcrumbs.astro';
+import Callout from '../../../components/Callout.astro';
+import { NMT_LINES } from '../../../data/nmt';
+import { readyWorkSlugs } from '../../../lib/content';
+
+const ready = await readyWorkSlugs();
+---
+
+<Base
+  title="Крилаті рядки з творів НМТ — за цитатою впізнати твір"
+  description="Крилаті рядки й цитати з творів програми НМТ з української літератури: за якою цитатою який твір і хто автор."
+>
+  <div class="mx-auto max-w-4xl px-4 py-8">
+    <Breadcrumbs items={[{ label: 'НМТ', href: '/nmt/' }, { label: 'Крилаті рядки' }]} />
+
+    <h1 class="font-sans text-3xl font-extrabold tracking-tight text-heading sm:text-4xl">Крилаті рядки</h1>
+    <p class="mt-2 max-w-reading font-serif text-lg text-muted">
+      Рядки, за якими твір упізнають у тесті. Учити їх напам’ять не треба — достатньо,
+      щоб цитата одразу «клацала» з назвою.
+    </p>
+
+    <input
+      type="search" id="line-filter" placeholder="Частина рядка, назва або автор…"
+      class="mt-6 w-full rounded-xl border border-line bg-surface px-4 py-3 font-sans text-[0.98rem] outline-none transition focus:border-brand"
+    />
+
+    <ul class="mt-6 space-y-2">
+      {NMT_LINES.map((l) => (
+        <li
+          class="rounded-xl border-l-[3px] border-brand bg-surface px-4 py-3"
+          data-line-row={`${l.line} ${l.title} ${l.author ?? ''}`.toLowerCase()}
+        >
+          <p class="font-serif text-[1.02rem] italic leading-relaxed">«{l.line}»</p>
+          <p class="mt-1.5 font-sans text-xs text-muted">
+            {ready.has(l.slug) ? (
+              <a href={`/tvory/${l.slug}/`} class="text-brand hover:underline">{l.title}</a>
+            ) : l.title}
+            {l.author ? ` · ${l.author}` : ' · народний твір'}
+          </p>
+        </li>
+      ))}
+    </ul>
+    <p class="mt-6 hidden font-sans text-muted" id="line-empty">Нічого не знайшли.</p>
+
+    <Callout tone="info" title="Як це вчиться найшвидше">
+      Не намагайся запам’ятати рядок цілком. Візьми з нього одне унікальне слово-гачок —
+      «кайдани», «оранжеве», «моторний», «квітки на морозі» — і прив’яжи до назви твору.
+      У тесті цитату дають повністю, тож одного гачка достатньо, щоб упізнати.
+    </Callout>
+
+    <p class="mt-6 font-sans text-sm">
+      <a href="/nmt/trenazher/" class="text-brand hover:underline">Потренуватися на цитатах →</a>
+    </p>
+  </div>
+</Base>
+
+<script>
+  function initLineFilter() {
+    const input = document.getElementById('line-filter') as HTMLInputElement | null;
+    if (!input || input.dataset.bound) return;
+    input.dataset.bound = '1';
+    const rows = [...document.querySelectorAll<HTMLElement>('[data-line-row]')];
+    const empty = document.getElementById('line-empty');
+    const norm = (s: string) => s.toLowerCase().replace(/[’'`«»]/g, '');
+
+    input.addEventListener('input', () => {
+      const q = norm(input.value.trim());
+      let found = 0;
+      rows.forEach((r) => {
+        const hit = !q || norm(r.dataset.lineRow!).includes(q);
+        r.hidden = !hit;
+        if (hit) found += 1;
+      });
+      empty?.classList.toggle('hidden', found > 0);
+    });
+  }
+  initLineFilter();
+  document.addEventListener('astro:page-load', initLineFilter);
+</script>

@@ -1,0 +1,106 @@
+---
+import Base from '../../../layouts/Base.astro';
+import Breadcrumbs from '../../../components/Breadcrumbs.astro';
+import Callout from '../../../components/Callout.astro';
+import { NMT_HEROES, NMT_AMBIGUOUS_HEROES } from '../../../data/nmt';
+import { readyWorkSlugs } from '../../../lib/content';
+
+const ready = await readyWorkSlugs();
+const heroes = [...NMT_HEROES].sort((a, b) => a.hero.localeCompare(b.hero, 'uk'));
+---
+
+<Base
+  title="Хто з якого твору — герої творів НМТ з української літератури"
+  description="Список героїв усіх творів програми НМТ з української літератури: хто з якого твору й хто автор. Саме на цьому будують завдання на встановлення відповідності."
+>
+  <div class="mx-auto max-w-4xl px-4 py-8">
+    <Breadcrumbs items={[{ label: 'НМТ', href: '/nmt/' }, { label: 'Хто з якого твору' }]} />
+
+    <h1 class="font-sans text-3xl font-extrabold tracking-tight text-heading sm:text-4xl">Хто з якого твору</h1>
+    <p class="mt-2 max-w-reading font-serif text-lg text-muted">
+      {heroes.length} героїв творів програми НМТ за абеткою. Характеристики тут не потрібні —
+      у тесті питають лише те, з якого твору персонаж.
+    </p>
+
+    <input
+      type="search" id="hero-filter" placeholder="Мавка, Чіпка, Тагабат…"
+      class="mt-6 w-full rounded-xl border border-line bg-surface px-4 py-3 font-sans text-[0.98rem] outline-none transition focus:border-brand"
+    />
+
+    <div class="mt-6 overflow-hidden rounded-xl border border-line bg-surface">
+      <div class="hidden grid-cols-[1fr_1fr_10rem] gap-4 border-b border-line px-4 py-2.5 font-sans text-xs font-semibold uppercase tracking-wide text-muted sm:grid">
+        <span>Герой</span><span>Твір</span><span>Автор</span>
+      </div>
+      <ul class="divide-y divide-line">
+        {heroes.map((h) => (
+          <li
+            class="grid gap-0.5 px-4 py-2.5 sm:grid-cols-[1fr_1fr_10rem] sm:gap-4"
+            data-hero-row={`${h.hero} ${h.title} ${h.author ?? ''}`.toLowerCase()}
+          >
+            <span class="font-sans text-[0.95rem] font-semibold text-heading">{h.hero}</span>
+            <span class="text-[0.93rem]">
+              {ready.has(h.slug) ? (
+                <a href={`/tvory/${h.slug}/`} class="text-brand hover:underline">{h.title}</a>
+              ) : h.title}
+            </span>
+            <span class="font-sans text-[0.85rem] text-muted">{h.author ?? 'народний твір'}</span>
+          </li>
+        ))}
+      </ul>
+    </div>
+    <p class="mt-6 hidden font-sans text-muted" id="hero-empty">Нічого не знайшли.</p>
+
+    <Callout tone="key" title="Імена-пастки: той самий персонаж у різних творах" icon="⚠️">
+      <p class="mb-2">
+        Ці імена трапляються більш ніж в одному творі програми — саме на них найлегше
+        помилитися в завданні на відповідність.
+      </p>
+      <ul class="ml-4 list-disc space-y-1">
+        {NMT_AMBIGUOUS_HEROES.map((a) => (
+          <li>
+            <strong>{a.hero}</strong> — {a.works.map((w, i) => (
+              <>{i > 0 ? '; ' : ''}«{w.title}»{w.author ? ` (${w.author})` : ''}</>
+            ))}
+          </li>
+        ))}
+      </ul>
+      <p class="mt-2 text-muted">
+        У тренажері такі імена не трапляються як питання — у них немає єдиної правильної відповіді.
+      </p>
+    </Callout>
+
+    <Callout tone="info" title="Ще одна класична пастка">
+      Дійові особи «Intermezzo» — це не люди, а образи-стани: Моя утома, Сонце,
+      Три білих вівчарки, Зозуля, Залізна рука города, Людське горе. Питання про
+      «персонажів Intermezzo» ставлять майже щороку.
+    </Callout>
+
+    <p class="mt-6 font-sans text-sm">
+      <a href="/nmt/trenazher/" class="text-brand hover:underline">Перевірити себе в тренажері →</a>
+    </p>
+  </div>
+</Base>
+
+<script>
+  function initHeroFilter() {
+    const input = document.getElementById('hero-filter') as HTMLInputElement | null;
+    if (!input || input.dataset.bound) return;
+    input.dataset.bound = '1';
+    const rows = [...document.querySelectorAll<HTMLElement>('[data-hero-row]')];
+    const empty = document.getElementById('hero-empty');
+    const norm = (s: string) => s.toLowerCase().replace(/[’'`«»]/g, '');
+
+    input.addEventListener('input', () => {
+      const q = norm(input.value.trim());
+      let found = 0;
+      rows.forEach((r) => {
+        const hit = !q || norm(r.dataset.heroRow!).includes(q);
+        r.hidden = !hit;
+        if (hit) found += 1;
+      });
+      empty?.classList.toggle('hidden', found > 0);
+    });
+  }
+  initHeroFilter();
+  document.addEventListener('astro:page-load', initHeroFilter);
+</script>

@@ -1,0 +1,13 @@
+---
+interface Props { tone?: 'brand' | 'ink' | 'plain'; href?: string }
+const { tone = 'plain', href } = Astro.props;
+const cls = {
+  brand: 'bg-brand/10 text-brand',
+  ink: 'bg-ink/10 text-heading dark:bg-white/10',
+  plain: 'bg-line/60 text-muted',
+}[tone];
+const Comp = href ? 'a' : 'span';
+---
+<Comp href={href} class:list={['inline-flex items-center rounded-md px-2 py-0.5 font-sans text-xs font-medium', cls, href && 'hover:opacity-80']}>
+  <slot />
+</Comp>

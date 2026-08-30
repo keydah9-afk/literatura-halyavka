@@ -1,0 +1,58 @@
+---
+// Варіанти твору: різні за обсягом і кутом зору, щоб у класі не збіглися.
+interface Props {
+  variants: { label: string; hint?: string; text: string }[];
+}
+const { variants } = Astro.props;
+const words = (t: string) => t.trim().split(/\s+/).length;
+---
+<section id="varianty" class="space-y-4">
+  <h2 class="font-sans text-2xl font-bold text-heading">Готові твори</h2>
+  {variants.map((v, i) => (
+    <details class="group overflow-hidden rounded-xl border border-line bg-surface" open={i === 0}>
+      <summary class="flex cursor-pointer list-none items-center justify-between gap-3 px-4 py-3">
+        <span class="font-sans text-[0.95rem] font-bold text-heading">
+          Варіант {i + 1}. {v.label}
+          {v.hint && <span class="ml-2 font-normal text-muted">{v.hint}</span>}
+        </span>
+        <span class="flex shrink-0 items-center gap-2">
+          <span class="rounded-md bg-line/60 px-2 py-0.5 font-sans text-xs text-muted">{words(v.text)} слів</span>
+          <svg class="h-4 w-4 text-muted transition group-open:rotate-180" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m6 9 6 6 6-6" /></svg>
+        </span>
+      </summary>
+      <div class="border-t border-line px-4 py-4">
+        <div class="prose-reading" data-essay-text>
+          {v.text.trim().split(/\n\s*\n/).map((p) => <p>{p.trim()}</p>)}
+        </div>
+        <button type="button" data-copy class="no-print mt-4 inline-flex items-center gap-2 rounded-lg border border-line px-3 py-1.5 font-sans text-sm text-muted transition hover:border-brand hover:text-brand">
+          <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="9" y="9" width="11" height="11" rx="2" /><path d="M5 15V5a2 2 0 0 1 2-2h10" /></svg>
+          Скопіювати текст
+        </button>
+      </div>
+    </details>
+  ))}
+</section>
+
+<script>
+  function initCopy() {
+    document.querySelectorAll<HTMLButtonElement>('[data-copy]').forEach((btn) => {
+      if (btn.dataset.bound) return;
+      btn.dataset.bound = '1';
+      btn.addEventListener('click', async () => {
+        const box = btn.parentElement?.querySelector<HTMLElement>('[data-essay-text]');
+        if (!box) return;
+        const text = [...box.querySelectorAll('p')].map((p) => p.textContent?.trim()).join('\n\n');
+        try {
+          await navigator.clipboard.writeText(text);
+          const old = btn.innerHTML;
+          btn.textContent = 'Скопійовано ✓';
+          setTimeout(() => (btn.innerHTML = old), 1600);
+        } catch {
+          /* буфер недоступний — користувач виділить текст сам */
+        }
+      });
+    });
+  }
+  initCopy();
+  document.addEventListener('astro:page-load', initCopy);
+</script>

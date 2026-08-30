@@ -1,0 +1,23 @@
+---
+interface Props {
+  /** info — світло-синій, key — кремовий «головна думка», warn — попередження */
+  tone?: 'info' | 'key' | 'warn';
+  title?: string;
+  icon?: string;
+}
+const { tone = 'info', title, icon } = Astro.props;
+const styles = {
+  info: 'border-ink/20 bg-ink/5 dark:bg-white/5',
+  key: 'border-brand/30 bg-cream dark:bg-white/5',
+  warn: 'border-brand/40 bg-brand/5',
+}[tone];
+const defaultIcon = { info: 'ℹ️', key: '💡', warn: '⚠️' }[tone];
+---
+<aside class:list={['my-6 rounded-xl border px-4 py-3.5', styles]}>
+  {title && (
+    <p class="mb-1.5 flex items-center gap-2 font-sans text-sm font-bold text-heading">
+      <span aria-hidden="true">{icon ?? defaultIcon}</span>{title}
+    </p>
+  )}
+  <div class="text-[0.98rem] leading-relaxed"><slot /></div>
+</aside>

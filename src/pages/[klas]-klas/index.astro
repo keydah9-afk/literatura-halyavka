@@ -1,0 +1,61 @@
+---
+import Base from '../../layouts/Base.astro';
+import Breadcrumbs from '../../components/Breadcrumbs.astro';
+import WorkCard from '../../components/WorkCard.astro';
+import Callout from '../../components/Callout.astro';
+import { PROGRAM } from '../../data/program';
+import { readyWorkSlugs, getEssays, plural } from '../../lib/content';
+
+export async function getStaticPaths() {
+  return PROGRAM.map((c) => ({ params: { klas: String(c.klas) }, props: { klasData: c } }));
+}
+
+const { klasData } = Astro.props;
+const ready = await readyWorkSlugs();
+const essays = (await getEssays()).filter((e) => e.data.classes.includes(klasData.klas));
+const total = klasData.sections.reduce((n, s) => n + s.works.length, 0);
+const done = klasData.sections.reduce((n, s) => n + s.works.filter((w) => ready.has(w.slug)).length, 0);
+
+const title = `Українська література ${klasData.klas} клас — короткий зміст усіх творів`;
+const description = `Усі твори програми ${klasData.klas} класу з української літератури: короткий зміст, аналіз, характеристики героїв і готові твори.`;
+---
+
+<Base {title} {description}>
+  <div class="mx-auto max-w-4xl px-4 py-8">
+    <Breadcrumbs items={[{ label: `${klasData.klas} клас` }]} />
+
+    <h1 class="font-sans text-3xl font-extrabold tracking-tight text-heading sm:text-4xl">
+      Українська література, {klasData.klas} клас
+    </h1>
+    <p class="mt-1 font-sans text-base text-brand">{klasData.tagline}</p>
+    <p class="mt-3 max-w-reading font-serif text-lg leading-relaxed">{klasData.intro}</p>
+
+    <p class="mt-4 font-sans text-sm text-muted">
+      У програмі {total} {plural(total, ['твір', 'твори', 'творів'])} · готово сторінок: {done}
+      {essays.length > 0 && <> · тем для творів: {essays.length}</>}
+    </p>
+
+    {klasData.sections.map((section) => (
+      <section class="mt-8">
+        <h2 class="mb-3 font-sans text-xl font-bold text-heading">{section.title}</h2>
+        <div class="space-y-2">
+          {section.works.map((w) => <WorkCard work={w} ready={ready.has(w.slug)} />)}
+        </div>
+      </section>
+    ))}
+
+    {klasData.klas >= 10 && (
+      <Callout tone="key" title="Не забудь про НМТ" icon="🎓">
+        Українська література — предмет на вибір у НМТ, і список творів там свій: коротший за
+        шкільну програму й відомий заздалегідь. <a href="/nmt/" class="text-brand underline">Подивитися перелік і формат тесту</a>,
+        а потім перевірити себе в <a href="/nmt/trenazher/" class="text-brand underline">тренажері</a>.
+      </Callout>
+    )}
+
+    <Callout tone="info" title="Чому список може не збігатися з твоїм підручником">
+      У НУШ немає єдиної програми: школа обирає одну з модельних, і той самий твір може стояти в 6 або 7 класі,
+      а якісь тексти вчитель заміняє на власний вибір. Тому дивись не лише «свій» клас — сторінка твору одна
+      незалежно від того, у якому році його задали.
+    </Callout>
+  </div>
+</Base>

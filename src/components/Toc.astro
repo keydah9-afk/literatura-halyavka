@@ -1,0 +1,46 @@
+---
+interface Props {
+  items: { id: string; text: string }[];
+}
+const { items } = Astro.props;
+---
+<nav class="no-print sticky top-20 hidden max-h-[calc(100vh-6rem)] overflow-y-auto lg:block" aria-label="Зміст сторінки">
+  <p class="mb-2 font-sans text-xs font-bold uppercase tracking-wide text-muted">Зміст</p>
+  <ul class="space-y-1 border-l border-line font-sans text-sm">
+    {items.map((it) => (
+      <li>
+        <a
+          href={`#${it.id}`}
+          data-toc-link={it.id}
+          class="-ml-px block border-l-2 border-transparent py-1 pl-3 text-muted transition hover:border-brand hover:text-brand"
+        >{it.text}</a>
+      </li>
+    ))}
+  </ul>
+</nav>
+
+<script>
+  // Підсвічуємо пункт змісту, повз який зараз скролимо
+  function initToc() {
+    const links = [...document.querySelectorAll<HTMLAnchorElement>('[data-toc-link]')];
+    if (!links.length) return;
+    const active = 'border-brand text-brand font-medium';
+    const targets = links
+      .map((l) => document.getElementById(l.dataset.tocLink!))
+      .filter((el): el is HTMLElement => !!el);
+
+    const io = new IntersectionObserver(
+      (entries) => {
+        const visible = entries.filter((e) => e.isIntersecting).sort((a, b) => a.boundingClientRect.top - b.boundingClientRect.top)[0];
+        if (!visible) return;
+        links.forEach((l) => l.classList.remove(...active.split(' ')));
+        const link = links.find((l) => l.dataset.tocLink === visible.target.id);
+        link?.classList.add(...active.split(' '));
+      },
+      { rootMargin: '-80px 0px -70% 0px', threshold: 0 }
+    );
+    targets.forEach((t) => io.observe(t));
+  }
+  initToc();
+  document.addEventListener('astro:page-load', initToc);
+</script>

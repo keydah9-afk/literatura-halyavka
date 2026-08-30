@@ -1,0 +1,117 @@
+---
+import Base from '../../../layouts/Base.astro';
+import Breadcrumbs from '../../../components/Breadcrumbs.astro';
+import Callout from '../../../components/Callout.astro';
+import { NMT_BY_SECTION, NMT_REAL_WORKS } from '../../../data/nmt';
+import { readyWorkSlugs, readyAuthorSlugs } from '../../../lib/content';
+
+const ready = await readyWorkSlugs();
+const readyAuthors = await readyAuthorSlugs();
+---
+
+<Base
+  title={`Усі твори НМТ з української літератури — список із ${NMT_REAL_WORKS.length} текстів`}
+  description="Повний перелік творів, які треба знати на НМТ з української літератури: автор, жанр, рік, напрям і головне про кожен твір. Згруповано за розділами програми."
+>
+  <div class="mx-auto max-w-4xl px-4 py-8">
+    <Breadcrumbs items={[{ label: 'НМТ', href: '/nmt/' }, { label: 'Усі твори' }]} />
+
+    <h1 class="font-sans text-3xl font-extrabold tracking-tight text-heading sm:text-4xl">
+      Усі твори НМТ з української літератури
+    </h1>
+    <p class="mt-2 max-w-reading font-serif text-lg text-muted">
+      {NMT_REAL_WORKS.length} творів за розділами програми. Розгорни будь-який рядок — там герої,
+      крилаті рядки й те, що найчастіше питають саме про цей текст.
+    </p>
+
+    <input
+      type="search" id="nmt-filter" placeholder="Автор, назва або герой…"
+      class="mt-6 w-full rounded-xl border border-line bg-surface px-4 py-3 font-sans text-[0.98rem] outline-none transition focus:border-brand"
+    />
+
+    {NMT_BY_SECTION.map((group) => (
+      <section class="mt-8" data-nmt-group>
+        <h2 class="mb-3 font-sans text-xl font-bold text-heading">{group.section}</h2>
+        <div class="space-y-2">
+          {group.works.map((w) => (
+            <details
+              class="group overflow-hidden rounded-xl border border-line bg-surface"
+              data-nmt-row={`${w.title} ${w.author ?? ''} ${w.genre} ${(w.heroes ?? []).join(' ')}`.toLowerCase()}
+            >
+              <summary class="flex cursor-pointer list-none items-start justify-between gap-3 px-4 py-3">
+                <span>
+                  <span class="font-sans text-[0.98rem] font-semibold text-heading">{w.title}</span>
+                  {w.author && <span class="ml-2 font-sans text-sm text-muted">{w.author}</span>}
+                  <span class="mt-0.5 block font-sans text-xs text-muted">
+                    {w.genre}{w.year ? ` · ${w.year}` : ''}{w.direction ? ` · ${w.direction}` : ''}
+                  </span>
+                </span>
+                <svg class="mt-1 h-4 w-4 shrink-0 text-muted transition group-open:rotate-180" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m6 9 6 6 6-6" /></svg>
+              </summary>
+              <div class="space-y-3 border-t border-line px-4 py-3.5 text-[0.95rem]">
+                {w.note && <p class="leading-relaxed">{w.note}</p>}
+                {w.heroes && w.heroes.length > 0 && (
+                  <p>
+                    <span class="font-sans text-xs font-semibold uppercase tracking-wide text-muted">Герої: </span>
+                    {w.heroes.join(', ')}
+                  </p>
+                )}
+                {w.lines && w.lines.length > 0 && (
+                  <ul class="space-y-1 border-l-2 border-brand/40 pl-3 font-serif italic text-muted">
+                    {w.lines.map((l) => <li>«{l}»</li>)}
+                  </ul>
+                )}
+                <p class="flex flex-wrap gap-3 font-sans text-sm">
+                  {ready.has(w.slug) ? (
+                    <a href={`/tvory/${w.slug}/`} class="text-brand hover:underline">Короткий зміст і аналіз →</a>
+                  ) : (
+                    <span class="text-muted">Розбір готуємо</span>
+                  )}
+                  {w.authorSlug && readyAuthors.has(w.authorSlug) && (
+                    <a href={`/pysmennyky/${w.authorSlug}/`} class="text-brand hover:underline">Про автора →</a>
+                  )}
+                </p>
+              </div>
+            </details>
+          ))}
+        </div>
+      </section>
+    ))}
+
+    <p class="mt-6 hidden font-sans text-muted" id="nmt-empty">Нічого не знайшли. Спробуй іншим словом.</p>
+
+    <Callout tone="warn" title="Звір із офіційним переліком">
+      Перелік укладено за чинною програмою ЗНО з української мови і літератури, за якою
+      готують завдання НМТ. Програму інколи коригують, тож перед іспитом перевір актуальну
+      редакцію на офіційних ресурсах — особливо якщо між твоєю підготовкою і тестом минув рік.
+    </Callout>
+  </div>
+</Base>
+
+<script>
+  function initNmtFilter() {
+    const input = document.getElementById('nmt-filter') as HTMLInputElement | null;
+    if (!input || input.dataset.bound) return;
+    input.dataset.bound = '1';
+    const rows = [...document.querySelectorAll<HTMLElement>('[data-nmt-row]')];
+    const groups = [...document.querySelectorAll<HTMLElement>('[data-nmt-group]')];
+    const empty = document.getElementById('nmt-empty');
+    const norm = (s: string) => s.toLowerCase().replace(/[’'`]/g, '');
+
+    input.addEventListener('input', () => {
+      const q = norm(input.value.trim());
+      let found = 0;
+      rows.forEach((row) => {
+        const hit = !q || norm(row.dataset.nmtRow!).includes(q);
+        row.hidden = !hit;
+        if (hit) found += 1;
+      });
+      groups.forEach((g) => {
+        g.hidden = ![...g.querySelectorAll<HTMLElement>('[data-nmt-row]')].some((r) => !r.hidden);
+      });
+      empty?.classList.toggle('hidden', found > 0);
+    });
+  }
+  initNmtFilter();
+  document.addEventListener('astro:page-load', initNmtFilter);
+</script>

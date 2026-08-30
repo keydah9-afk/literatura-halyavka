@@ -1,0 +1,17 @@
+---
+import Base from '../layouts/Base.astro';
+import { CLASSES } from '../data/site';
+---
+<Base title="Сторінку не знайдено" description="Такої сторінки немає." noindex>
+  <div class="mx-auto max-w-reading px-4 py-20 text-center">
+    <p class="font-sans text-6xl font-extrabold text-brand">404</p>
+    <h1 class="mt-3 font-sans text-2xl font-bold text-heading">Такої сторінки немає</h1>
+    <p class="mt-2 text-muted">Можливо, розбір цього твору ще готується. Обери клас або скористайся пошуком.</p>
+    <div class="mt-6 flex flex-wrap justify-center gap-2">
+      {CLASSES.map((k) => (
+        <a href={`/${k}-klas/`} class="rounded-lg border border-line bg-surface px-3.5 py-2 font-sans text-sm font-semibold text-heading transition hover:border-brand hover:text-brand">{k} клас</a>
+      ))}
+      <a href="/poshuk/" class="rounded-lg bg-brand px-3.5 py-2 font-sans text-sm font-semibold text-white transition hover:opacity-90">Пошук</a>
+    </div>
+  </div>
+</Base>

@@ -1,0 +1,53 @@
+---
+import Base from '../../layouts/Base.astro';
+import Breadcrumbs from '../../components/Breadcrumbs.astro';
+import { getAuthors } from '../../lib/content';
+import { ALL_WORKS } from '../../data/program';
+
+const authors = await getAuthors();
+const ready = new Set(authors.map((a) => a.id));
+
+// Усі письменники з каталогу програми — навіть ті, чиєї сторінки ще нема
+const fromProgram = new Map<string, { name: string; classes: Set<number> }>();
+for (const w of ALL_WORKS) {
+  if (!w.authorSlug || !w.author) continue;
+  const entry = fromProgram.get(w.authorSlug) ?? { name: w.author, classes: new Set<number>() };
+  entry.classes.add(w.klas);
+  fromProgram.set(w.authorSlug, entry);
+}
+const list = [...fromProgram.entries()]
+  .map(([slug, v]) => ({ slug, name: v.name, classes: [...v.classes].sort((a, b) => a - b), ready: ready.has(slug) }))
+  .sort((a, b) => a.name.localeCompare(b.name, 'uk'));
+---
+
+<Base
+  title="Українські письменники — короткі біографії для школи"
+  description="Біографії українських письменників зі шкільної програми: головне за хвилину, хронологія життя, цікаві факти, крилаті вислови."
+>
+  <div class="mx-auto max-w-4xl px-4 py-8">
+    <Breadcrumbs items={[{ label: 'Письменники' }]} />
+    <h1 class="font-sans text-3xl font-extrabold tracking-tight text-heading sm:text-4xl">Письменники</h1>
+    <p class="mt-2 max-w-reading font-serif text-lg text-muted">
+      {list.length} імен зі шкільної програми. У кожній біографії — блок «головне за хвилину»
+      (саме те, що просять розказати на уроці), хронологія й факти, які легко запам’ятати.
+    </p>
+
+    <ul class="mt-8 grid gap-2 sm:grid-cols-2">
+      {list.map((a) => (
+        <li>
+          {a.ready ? (
+            <a href={`/pysmennyky/${a.slug}/`} class="group block rounded-lg border border-line bg-surface px-4 py-3 transition hover:border-brand/60">
+              <span class="font-sans text-[0.95rem] font-semibold text-heading group-hover:text-brand">{a.name}</span>
+              <span class="mt-0.5 block font-sans text-xs text-muted">{a.classes.join(', ')} клас</span>
+            </a>
+          ) : (
+            <div class="rounded-lg border border-dashed border-line px-4 py-3 opacity-70">
+              <span class="font-sans text-[0.95rem] font-semibold text-muted">{a.name}</span>
+              <span class="mt-0.5 block font-sans text-xs text-muted">{a.classes.join(', ')} клас · готуємо</span>
+            </div>
+          )}
+        </li>
+      ))}
+    </ul>
+  </div>
+</Base>

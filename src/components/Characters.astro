@@ -1,0 +1,32 @@
+---
+interface Props {
+  characters: { name: string; role: string; traits: string[]; summary: string; quotes: string[] }[];
+}
+const { characters } = Astro.props;
+---
+<section id="heroyi">
+  <h2 class="mb-3 font-sans text-2xl font-bold text-heading">Головні герої</h2>
+  <div class="space-y-3">
+    {characters.map((c) => (
+      <article class="rounded-xl border border-line bg-surface p-4">
+        <header class="mb-2 flex flex-wrap items-baseline gap-x-2">
+          <h3 class="font-sans text-lg font-bold text-heading">{c.name}</h3>
+          <span class="font-sans text-sm text-muted">— {c.role}</span>
+        </header>
+        <p class="mb-3 text-[0.98rem] leading-relaxed">{c.summary}</p>
+        {c.traits.length > 0 && (
+          <ul class="mb-3 flex flex-wrap gap-1.5">
+            {c.traits.map((t) => (
+              <li class="rounded-md bg-line/60 px-2 py-0.5 font-sans text-xs text-muted">{t}</li>
+            ))}
+          </ul>
+        )}
+        {c.quotes.length > 0 && (
+          <ul class="space-y-1.5 border-l-2 border-brand/40 pl-3 font-serif text-[0.95rem] italic text-muted">
+            {c.quotes.map((q) => <li>«{q}»</li>)}
+          </ul>
+        )}
+      </article>
+    ))}
+  </div>
+</section>
