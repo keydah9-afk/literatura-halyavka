@@ -2,6 +2,12 @@
 
 Піддомен halyavka.net. Astro 5 (SSG) + Tailwind 4 + Content Collections. Деплой — Netlify (`netlify.toml`).
 
+**Деплой:** репозиторій `keydah9-afk/literatura-halyavka` (гілка `main`) → Netlify-сайт
+`literatura-halyavka.netlify.app` → домен `literatura.halyavka.net`.
+DNS домену halyavka.net — у Cloudflare: запис `CNAME literatura → literatura-halyavka.netlify.app`,
+режим **DNS only** (сіра хмарка). З оранжевою Netlify не випустить сертифікат Let's Encrypt,
+а при Cloudflare SSL = Flexible ще й з'явиться редирект-петля.
+
 - Запуск: `npm run dev` (порт 4330, див. `.claude/launch.json`). Білд: `npm run build`.
 - Бренд той самий, що в halyavka.net: червоний `#C1121F`, темно-синій `#003049`, кремовий `#FDF0D5`.
   Токени — у `src/styles/global.css` (`@theme` + перевизначення під `.dark`).
