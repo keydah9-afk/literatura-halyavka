@@ -23,9 +23,9 @@ Astro 5 (SSG) · TypeScript · Tailwind CSS 4 · Content Collections із Zod-с
 ## Структура
 
 ```
-src/data/program.ts      каталог програми 5–11 клас (163 твори) — скелет сайту
+src/data/program.ts      каталог програми 5–11 клас (165 творів) — скелет сайту
 src/data/terms.ts        словник літературознавчих термінів
-src/data/nmt.ts          програма НМТ: 61 твір, герої, крилаті рядки
+src/data/nmt.ts          програма НМТ: 62 твори, герої, крилаті рядки
 src/content/works/       розбори творів      → /tvory/<slug>/
 src/content/essays/      шкільні твори       → /tvir-na-temu/<slug>/
 src/content/authors/     біографії           → /pysmennyky/<slug>/
