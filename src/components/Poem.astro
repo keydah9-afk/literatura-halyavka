@@ -1,0 +1,88 @@
+---
+// Текст вірша. Строфи розділені порожнім рядком, рядки всередині строфи —
+// звичайним переносом, тож розбивка автора зберігається як є.
+//
+// Режим «учу напам’ять» ховає всі рядки, крім першого в строфі: підказка
+// лишається, а решту треба пригадати самому. Без JS текст просто видно повністю.
+interface Props {
+  text: string;
+  title?: string;
+  note?: string;
+}
+const { text, title = 'Текст вірша', note } = Astro.props;
+const stanzas = text
+  .trim()
+  .split(/\n\s*\n/)
+  .map((s) => s.split('\n').map((l) => l.trim()).filter(Boolean))
+  .filter((s) => s.length);
+---
+<section id="tekst" class="my-8">
+  <div class="mb-3 flex flex-wrap items-baseline justify-between gap-2">
+    <h2 class="font-sans text-2xl font-bold text-heading">{title}</h2>
+    <button
+      type="button"
+      data-poem-drill
+      class="no-print rounded-lg border border-line px-3 py-1.5 font-sans text-sm font-medium text-muted transition hover:border-brand/60 hover:text-brand"
+    >
+      Сховати рядки
+    </button>
+  </div>
+  {note && <p class="mb-3 font-sans text-sm text-muted">{note}</p>}
+
+  <div class="overflow-hidden rounded-xl border border-line bg-surface" data-poem>
+    <div class="space-y-5 px-5 py-5 sm:px-7 sm:py-6">
+      {stanzas.map((lines) => (
+        <p class="font-serif text-[1.05rem] leading-[1.75] text-body sm:text-[1.1rem]">
+          {lines.map((line, i) => (
+            <>
+              <span class:list={['poem-line', i > 0 && 'poem-line--hideable']}>{line}</span>
+              {i < lines.length - 1 && <br />}
+            </>
+          ))}
+        </p>
+      ))}
+    </div>
+  </div>
+</section>
+
+<style>
+  /* У режимі тренування рядок лишається на місці — зникає лише текст,
+     інакше строфа стрибала б і підказувала довжину рядка не тим способом. */
+  [data-poem].is-drilling .poem-line--hideable {
+    color: transparent;
+    background: color-mix(in srgb, var(--color-line) 70%, transparent);
+    border-radius: 0.25rem;
+    cursor: pointer;
+  }
+  [data-poem].is-drilling .poem-line--hideable.is-revealed {
+    color: inherit;
+    background: none;
+    cursor: default;
+  }
+</style>
+
+<script>
+  function initPoem() {
+    document.querySelectorAll<HTMLElement>('[data-poem-drill]').forEach((btn) => {
+      if (btn.dataset.bound) return;
+      btn.dataset.bound = '1';
+      const poem = btn.closest('section')?.querySelector<HTMLElement>('[data-poem]');
+      if (!poem) return;
+
+      btn.addEventListener('click', () => {
+        const on = poem.classList.toggle('is-drilling');
+        btn.textContent = on ? 'Показати текст' : 'Сховати рядки';
+        if (!on) poem.querySelectorAll('.is-revealed').forEach((l) => l.classList.remove('is-revealed'));
+      });
+
+      // Клік по схованому рядку відкриває саме його — коли зовсім забув.
+      poem.addEventListener('click', (e) => {
+        if (!poem.classList.contains('is-drilling')) return;
+        const line = (e.target as HTMLElement).closest('.poem-line--hideable');
+        line?.classList.add('is-revealed');
+      });
+    });
+  }
+  initPoem();
+  document.addEventListener('astro:page-load', initPoem);
+</script>

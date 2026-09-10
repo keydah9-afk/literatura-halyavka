@@ -5,6 +5,8 @@ import Breadcrumbs from '../../components/Breadcrumbs.astro';
 import Toc from '../../components/Toc.astro';
 import Callout from '../../components/Callout.astro';
 import Passport from '../../components/Passport.astro';
+import PoemForm from '../../components/PoemForm.astro';
+import Poem from '../../components/Poem.astro';
 import Characters from '../../components/Characters.astro';
 import QuoteList from '../../components/QuoteList.astro';
 import Quiz from '../../components/Quiz.astro';
@@ -27,6 +29,8 @@ const mdHeadings = headings.filter((h) => h.depth === 2).map((h) => ({ id: h.slu
 const toc = [
   { id: 'korotko', text: 'Дуже коротко' },
   { id: 'pasport', text: 'Паспорт твору' },
+  ...(d.poem ? [{ id: 'virshoznavstvo', text: 'Віршознавчий паспорт' }] : []),
+  ...(d.poemText ? [{ id: 'tekst', text: 'Текст вірша' }] : []),
   ...mdHeadings,
   ...(d.characters.length ? [{ id: 'heroyi', text: 'Головні герої' }] : []),
   ...(d.quotes.length ? [{ id: 'tsytaty', text: 'Цитати' }] : []),
@@ -36,7 +40,10 @@ const toc = [
   ...(d.quiz.length ? [{ id: 'test', text: 'Перевір себе' }] : []),
 ];
 
-const title = `${d.title}${d.author ? ` — ${d.author}` : ''}: короткий зміст і аналіз`;
+// У лірики немає «короткого змісту» — обіцяти його в title означало б
+// приводити з пошуку людей, які шукають переказ, і показувати їм не те.
+const titleTail = d.kind === 'поезія' ? 'аналіз вірша й текст' : 'короткий зміст і аналіз';
+const title = `${d.title}${d.author ? ` — ${d.author}` : ''}: ${titleTail}`;
 const description = d.description ?? `${d.veryShort.slice(0, 150)}…`;
 const jsonLd = {
   '@context': 'https://schema.org',
@@ -73,6 +80,8 @@ const jsonLd = {
       </Callout>
 
       <Passport passport={d.passport} author={d.author} />
+      {d.poem && <PoemForm poem={d.poem} />}
+      {d.poemText && <Poem text={d.poemText} note={d.poemTextNote} />}
 
       <div class="prose-reading"><Content /></div>
 
@@ -124,7 +133,11 @@ const jsonLd = {
       </div>
 
       <Callout tone="info" title="Чесно кажучи">
-        Переказ — це підказка, а не заміна книжці. На уроці одразу видно того, хто читав: у нього є свої улюблені сцени й запитання до автора. Використай цю сторінку, щоб швидко пригадати сюжет — а сам твір усе-таки відкрий.
+        {d.kind === 'поезія' ? (
+          <>Готовий аналіз — це чужа думка про вірш, і вчитель це чує. Перечитай текст уголос сам: у ліриці половина змісту в тому, де ти зупинишся й що виділиш голосом. Ця сторінка потрібна, щоб не проґавити термін чи образ, а не щоб замінити власне читання.</>
+        ) : (
+          <>Переказ — це підказка, а не заміна книжці. На уроці одразу видно того, хто читав: у нього є свої улюблені сцени й запитання до автора. Використай цю сторінку, щоб швидко пригадати сюжет — а сам твір усе-таки відкрий.</>
+        )}
       </Callout>
     </article>
 

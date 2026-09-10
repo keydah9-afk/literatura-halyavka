@@ -8,7 +8,7 @@
     "build": "astro build",
     "preview": "astro preview",
     "astro": "astro",
-    "check": "node scripts/check-slugs.mjs"
+    "check": "node scripts/check-slugs.mjs && node scripts/check-content.mjs"
   },
   "dependencies": {
     "@astrojs/rss": "^4.0.12",

@@ -1,0 +1,32 @@
+---
+// «Віршознавчий паспорт» — те, що питають на уроці лірики і чого немає в прозі.
+// Свідомо окремий від Passport.astro: у вірша немає ні оповідача, ні конфлікту
+// в прозовому сенсі, зате є розмір, римування і ліричний герой.
+interface Props {
+  poem: {
+    meter: string; rhyme?: string; stanza?: string;
+    lyricalHero?: string; mood?: string; collection?: string; lyricKind?: string;
+  };
+}
+const { poem: p } = Astro.props;
+const rows: [string, string | undefined][] = [
+  ['Вид лірики', p.lyricKind],
+  ['Збірка, цикл', p.collection],
+  ['Віршовий розмір', p.meter],
+  ['Римування', p.rhyme],
+  ['Строфа', p.stanza],
+  ['Ліричний герой', p.lyricalHero],
+  ['Тональність', p.mood],
+];
+---
+<section id="virshoznavstvo" class="my-6 overflow-hidden rounded-xl border border-line bg-surface">
+  <h2 class="border-b border-line px-4 py-3 font-sans text-base font-bold text-heading">Віршознавчий паспорт</h2>
+  <dl class="divide-y divide-line">
+    {rows.filter(([, v]) => v).map(([k, v]) => (
+      <div class="grid gap-1 px-4 py-2.5 sm:grid-cols-[11rem_1fr] sm:gap-4">
+        <dt class="font-sans text-xs font-semibold uppercase tracking-wide text-muted sm:text-[0.8rem] sm:normal-case sm:tracking-normal">{k}</dt>
+        <dd class="text-[0.98rem] leading-relaxed">{v}</dd>
+      </div>
+    ))}
+  </dl>
+</section>
