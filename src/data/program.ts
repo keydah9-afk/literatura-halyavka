@@ -367,7 +367,7 @@ export const PROGRAM: ProgramClass[] = [
           { slug: 'valse-melancolique', title: 'Valse mélancolique', author: 'Ольга Кобилянська', authorSlug: 'olha-kobylyanska', genre: 'новела', kind: 'проза' },
           { slug: 'zemlya', title: 'Земля', author: 'Ольга Кобилянська', authorSlug: 'olha-kobylyanska', genre: 'соціально-психологічна повість', kind: 'проза' },
           { slug: 'kaminnyj-hrest', title: 'Камінний хрест', author: 'Василь Стефаник', authorSlug: 'vasyl-stefanyk', genre: 'психологічна новела', kind: 'проза' },
-          { slug: 'stefanyk-novyna', title: 'Новина', author: 'Василь Стефаник', authorSlug: 'vasyl-stefanyk', genre: 'новела', kind: 'проза' },
+          { slug: 'novyna', title: 'Новина', author: 'Василь Стефаник', authorSlug: 'vasyl-stefanyk', genre: 'новела', kind: 'проза' },
           { slug: 'moment', title: 'Момент', author: 'Володимир Винниченко', authorSlug: 'volodymyr-vynnychenko', genre: 'імпресіоністична новела', kind: 'проза' },
         ],
       },
