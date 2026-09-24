@@ -373,7 +373,7 @@ export const NMT_WORKS: NmtWork[] = [
   {
     slug: 'holoborodko-nasha-mova', title: 'Наша мова', author: 'Василь Голобородько', authorSlug: 'vasyl-holoborodko',
     genre: 'верлібр', section: 'Література XX ст.',
-    note: 'Вільний вірш без рими; мова постає як хата, у якій живе народ.',
+    note: 'Верлібр без рими й розділових знаків; мова — це і Пісня, і Літопис, а мовчання на самоті теж звучить рідною мовою.',
   },
   {
     slug: 'modry-kamen', title: 'Модри Камень', author: 'Олесь Гончар', authorSlug: 'oles-honchar',
