@@ -11,7 +11,7 @@ import Characters from '../../components/Characters.astro';
 import QuoteList from '../../components/QuoteList.astro';
 import Quiz from '../../components/Quiz.astro';
 import Tag from '../../components/Tag.astro';
-import { getWorks, getEssays, essaysForWork, readyAuthorSlugs } from '../../lib/content';
+import { getWorks, getEssays, getHeroes, essaysForWork, heroesForWork, heroUrl, readyAuthorSlugs } from '../../lib/content';
 import { SITE } from '../../data/site';
 
 export async function getStaticPaths() {
@@ -23,6 +23,7 @@ const { work } = Astro.props;
 const d = work.data;
 const { Content, headings } = await render(work);
 const essays = essaysForWork(await getEssays(), work.id);
+const heroLinks = Object.fromEntries(heroesForWork(await getHeroes(), work.id).map((h) => [h.data.name, heroUrl(h)]));
 const authorPageExists = !!d.authorSlug && (await readyAuthorSlugs()).has(d.authorSlug);
 
 const mdHeadings = headings.filter((h) => h.depth === 2).map((h) => ({ id: h.slug, text: h.text }));
@@ -86,7 +87,7 @@ const jsonLd = {
       <div class="prose-reading"><Content /></div>
 
       <div class="mt-10 space-y-10">
-        {d.characters.length > 0 && <Characters characters={d.characters} />}
+        {d.characters.length > 0 && <Characters characters={d.characters} links={heroLinks} />}
         {d.quotes.length > 0 && <QuoteList quotes={d.quotes} />}
 
         {d.devices.length > 0 && (

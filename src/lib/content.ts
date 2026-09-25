@@ -9,6 +9,18 @@ export async function getWorks() {
 export async function getEssays() {
   return (await getCollection('essays')).filter(isPublished);
 }
+export async function getHeroes() {
+  return (await getCollection('heroes')).filter(isPublished);
+}
+
+/** id героя — «<work>/<hero>»: з шляху файлу heroes/<work>/<hero>.md */
+export const heroWork = (h: CollectionEntry<'heroes'>) => h.id.split('/')[0];
+export const heroUrl = (h: CollectionEntry<'heroes'>) => `/tvory/${h.id}/`;
+
+export function heroesForWork(heroes: CollectionEntry<'heroes'>[], workSlug: string) {
+  return heroes.filter((h) => heroWork(h) === workSlug);
+}
+
 export async function getAuthors() {
   return (await getCollection('authors')).filter(isPublished);
 }

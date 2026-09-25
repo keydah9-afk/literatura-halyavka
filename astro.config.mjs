@@ -19,6 +19,19 @@ for (const [dir, prefix] of Object.entries(COLLECTION_URL)) {
   }
 }
 
+// Характеристики героїв: heroes/<work>/<hero>.md → /tvory/<work>/<hero>/
+try {
+  for (const work of readdirSync('src/content/heroes', { withFileTypes: true })) {
+    if (!work.isDirectory()) continue;
+    for (const file of readdirSync(`src/content/heroes/${work.name}`)) {
+      if (!file.endsWith('.md') || file.startsWith('_')) continue;
+      const fm = readFileSync(`src/content/heroes/${work.name}/${file}`, 'utf8').split(/^---$/m)[1] ?? '';
+      const date = fm.match(/^updatedDate:\s*(\S+)/m)?.[1] ?? fm.match(/^date:\s*(\S+)/m)?.[1];
+      if (date) lastmod.set(`${SITE}/tvory/${work.name}/${file.slice(0, -3)}/`, new Date(date).toISOString());
+    }
+  }
+} catch {}
+
 // Сторінки з noindex не повинні потрапляти в sitemap — інакше суперечливі сигнали для пошуковика.
 const NOINDEX = [`${SITE}/poshuk/`];
 

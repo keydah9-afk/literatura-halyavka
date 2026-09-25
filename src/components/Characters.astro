@@ -1,8 +1,10 @@
 ---
 interface Props {
   characters: { name: string; role: string; traits: string[]; summary: string; quotes: string[] }[];
+  /** ім’я героя → адреса окремої сторінки-характеристики, якщо вона є */
+  links?: Record<string, string>;
 }
-const { characters } = Astro.props;
+const { characters, links = {} } = Astro.props;
 ---
 <section id="heroyi">
   <h2 class="mb-3 font-sans text-2xl font-bold text-heading">Головні герої</h2>
@@ -20,6 +22,9 @@ const { characters } = Astro.props;
               <li class="rounded-md bg-line/60 px-2 py-0.5 font-sans text-xs text-muted">{t}</li>
             ))}
           </ul>
+        )}
+        {links[c.name] && (
+          <a href={links[c.name]} class="mb-3 inline-block font-sans text-sm font-semibold text-brand hover:underline">Повна характеристика: риси, розвиток, план →</a>
         )}
         {c.quotes.length > 0 && (
           <ul class="space-y-1.5 border-l-2 border-brand/40 pl-3 font-serif text-[0.95rem] italic text-muted">

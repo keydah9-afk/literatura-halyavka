@@ -1,0 +1,155 @@
+---
+import { render } from 'astro:content';
+import Base from '../../../layouts/Base.astro';
+import Breadcrumbs from '../../../components/Breadcrumbs.astro';
+import Toc from '../../../components/Toc.astro';
+import Callout from '../../../components/Callout.astro';
+import QuoteList from '../../../components/QuoteList.astro';
+import Tag from '../../../components/Tag.astro';
+import { getWorks, getEssays, getHeroes, heroWork, heroUrl, heroesForWork, essaysForWork } from '../../../lib/content';
+import { SITE } from '../../../data/site';
+
+export async function getStaticPaths() {
+  const works = await getWorks();
+  const heroes = await getHeroes();
+  return heroes.map((hero) => {
+    const [slug, h] = hero.id.split('/');
+    const work = works.find((w) => w.id === slug);
+    if (!work) throw new Error(`heroes/${hero.id}: немає розбору src/content/works/${slug}.md`);
+    return { params: { slug, hero: h }, props: { hero, work, siblings: heroesForWork(heroes, slug).filter((x) => x.id !== hero.id) } };
+  });
+}
+
+const { hero, work, siblings } = Astro.props;
+const d = hero.data;
+const w = work.data;
+const { Content, headings } = await render(hero);
+const essays = essaysForWork(await getEssays(), heroWork(hero));
+const workUrl = `/tvory/${work.id}/`;
+
+const toc = [
+  { id: 'korotko', text: 'Коротко' },
+  { id: 'rysy', text: 'Риси характеру' },
+  ...headings.filter((h) => h.depth === 2).map((h) => ({ id: h.slug, text: h.text })),
+  ...(d.relations.length ? [{ id: 'stosunky', text: 'Стосунки з іншими' }] : []),
+  ...(d.quotes.length ? [{ id: 'tsytaty', text: 'Цитати' }] : []),
+  ...(d.plan.length ? [{ id: 'plan', text: 'План характеристики' }] : []),
+];
+
+const title = `${d.title} — «${w.title}»${w.author ? `, ${w.author}` : ''}`;
+const description = d.description ?? `${d.short.slice(0, 150)}…`;
+const jsonLd = {
+  '@context': 'https://schema.org',
+  '@type': 'Article',
+  headline: title,
+  description,
+  inLanguage: 'uk',
+  datePublished: d.date.toISOString(),
+  dateModified: (d.updatedDate ?? d.date).toISOString(),
+  about: { '@type': 'CreativeWork', name: w.title, author: w.author, character: { '@type': 'Person', name: d.name } },
+  publisher: { '@type': 'Organization', name: SITE.name },
+};
+---
+
+<Base {title} {description} type="article" {jsonLd}>
+  <div class="mx-auto grid max-w-6xl gap-10 px-4 py-8 lg:grid-cols-[1fr_15rem]">
+    <article class="min-w-0 max-w-reading">
+      <Breadcrumbs items={[{ label: `${w.classes[0]} клас`, href: `/${w.classes[0]}-klas/` }, { label: w.title, href: workUrl }, { label: d.name }]} />
+
+      <h1 class="font-sans text-3xl font-extrabold leading-tight tracking-tight text-heading sm:text-4xl">{d.title}</h1>
+      <p class="mt-1.5 font-sans text-base text-muted">
+        <a href={workUrl} class="hover:text-brand">«{w.title}»</a>{w.author && <>, {w.author}</>}
+      </p>
+      <div class="mt-3 flex flex-wrap gap-1.5">
+        <Tag tone="brand">{d.role}</Tag>
+        {w.classes.map((k) => <Tag tone="ink" href={`/${k}-klas/`}>{k} клас</Tag>)}
+      </div>
+
+      <Callout tone="key" title="Якщо часу зовсім немає" icon="⏱">
+        <p id="korotko" class="scroll-mt-20">{d.short}</p>
+      </Callout>
+
+      <section id="rysy" class="mt-8 scroll-mt-20">
+        <h2 class="mb-3 font-sans text-2xl font-bold text-heading">Риси характеру</h2>
+        <dl class="divide-y divide-line overflow-hidden rounded-xl border border-line bg-surface">
+          {d.traits.map((t) => (
+            <div class="grid gap-1 px-4 py-3 sm:grid-cols-[11rem_1fr] sm:gap-4">
+              <dt class="font-sans text-sm font-semibold text-heading">{t.trait}</dt>
+              <dd class="text-[0.98rem] leading-relaxed">{t.proof}</dd>
+            </div>
+          ))}
+        </dl>
+      </section>
+
+      <div class="prose-reading"><Content /></div>
+
+      <div class="mt-10 space-y-10">
+        {d.relations.length > 0 && (
+          <section id="stosunky">
+            <h2 class="mb-3 font-sans text-2xl font-bold text-heading">Стосунки з іншими</h2>
+            <dl class="space-y-2">
+              {d.relations.map((r) => {
+                const page = siblings.find((s) => s.data.name === r.name);
+                return (
+                  <div class="rounded-xl border border-line bg-surface px-4 py-3">
+                    <dt class="font-sans text-sm font-semibold text-heading">
+                      {page ? <a href={heroUrl(page)} class="hover:text-brand">{r.name} →</a> : r.name}
+                    </dt>
+                    <dd class="mt-1 text-[0.98rem] leading-relaxed">{r.text}</dd>
+                  </div>
+                );
+              })}
+            </dl>
+          </section>
+        )}
+
+        {d.quotes.length > 0 && <QuoteList quotes={d.quotes} title="Цитати-характеристики" />}
+
+        {d.plan.length > 0 && (
+          <section id="plan">
+            <h2 class="mb-1 font-sans text-2xl font-bold text-heading">План характеристики</h2>
+            <p class="mb-3 font-sans text-sm text-muted">Для усної відповіді або твору-характеристики.</p>
+            <ol class="list-decimal space-y-1.5 rounded-xl border border-line bg-surface py-4 pl-9 pr-4 text-[0.98rem]">
+              {d.plan.map((p) => <li>{p}</li>)}
+            </ol>
+          </section>
+        )}
+
+        <section>
+          <h2 class="mb-3 font-sans text-2xl font-bold text-heading">Далі за твором</h2>
+          <ul class="space-y-2">
+            <li>
+              <a href={workUrl} class="group flex items-center justify-between gap-3 rounded-lg border border-brand/40 bg-surface px-4 py-3 transition hover:border-brand">
+                <span class="font-sans text-[0.95rem] font-semibold text-heading group-hover:text-brand">«{w.title}»: переказ, аналіз, тест</span>
+                <span class="text-brand">→</span>
+              </a>
+            </li>
+            {siblings.map((s) => (
+              <li>
+                <a href={heroUrl(s)} class="group flex items-center justify-between gap-3 rounded-lg border border-line bg-surface px-4 py-3 transition hover:border-brand/60">
+                  <span class="font-sans text-[0.95rem] font-medium text-heading group-hover:text-brand">{s.data.title}</span>
+                  <span class="text-muted">→</span>
+                </a>
+              </li>
+            ))}
+            {essays.map((e) => (
+              <li>
+                <a href={`/tvir-na-temu/${e.id}/`} class="group flex items-center justify-between gap-3 rounded-lg border border-line bg-surface px-4 py-3 transition hover:border-brand/60">
+                  <span class="font-sans text-[0.95rem] font-medium text-heading group-hover:text-brand">Твір: «{e.data.title}»</span>
+                  <span class="text-muted">→</span>
+                </a>
+              </li>
+            ))}
+          </ul>
+        </section>
+      </div>
+
+      <Callout tone="info" title="Чесно кажучи">
+        Характеристику з інтернету вчитель упізнає з першого речення. Візьми звідси риси й епізоди,
+        а доводь своїми словами — і хоча б одну сцену з героєм перечитай у книжці сам.
+      </Callout>
+    </article>
+
+    <aside><Toc items={toc} /></aside>
+  </div>
+</Base>

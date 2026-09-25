@@ -6,6 +6,8 @@ import { glob } from 'astro/loaders';
  *   works   → /tvory/<slug>/          (паспорт, переказ, герої, аналіз, цитати, тест)
  *   essays  → /tvir-na-temu/<slug>/   (готові шкільні твори, кілька варіантів)
  *   authors → /pysmennyky/<slug>/     (біографія + хронологія + факти)
+ *   heroes  → /tvory/<work>/<hero>/   (характеристика одного персонажа; файл лежить
+ *                                      у heroes/<work>/<hero>.md, тож твір видно з шляху)
  */
 
 const quote = z.object({
@@ -173,4 +175,35 @@ const authors = defineCollection({
   }),
 });
 
-export const collections = { works, essays, authors };
+/**
+ * Характеристика героя — окрема сторінка під запити «характеристика Чіпки»,
+ * «образ Мавки». Це не копія блоку `characters` із розбору, а розгорнута
+ * відповідь на шкільне завдання: риси з доказами, розвиток, ставлення автора.
+ */
+const heroes = defineCollection({
+  loader: glob({ pattern: '**/[^_]*.md', base: './src/content/heroes' }),
+  schema: z.object({
+    /** H1 і title: «Характеристика Чіпки» / «Образ Мавки» */
+    title: z.string().max(140),
+    description: z.string().max(220).optional(),
+    /** Ім’я точно як у `characters[].name` розбору — за ним ставиться посилання */
+    name: z.string(),
+    /** «головний герой», «антагоніст», «ліричний герой» */
+    role: z.string(),
+    /** 2–3 речення: хто це і чим важливий — блок «Якщо часу зовсім немає» */
+    short: z.string().max(600),
+    /** Риса + де в тексті вона виявляється (епізод, вчинок). Без доказу риса не пишеться. */
+    traits: z.array(z.object({ trait: z.string(), proof: z.string() })).min(3),
+    /** Цитати-характеристики; для авторів із чинними правами — порожньо */
+    quotes: z.array(quote).default([]),
+    /** Стосунки з іншими персонажами */
+    relations: z.array(z.object({ name: z.string(), text: z.string() })).default([]),
+    /** План шкільної характеристики — те, що переписують у зошит */
+    plan: z.array(z.string()).default([]),
+    date: z.coerce.date(),
+    updatedDate: z.coerce.date().optional(),
+    draft: z.boolean().default(false),
+  }),
+});
+
+export const collections = { works, essays, authors, heroes };

@@ -18,6 +18,7 @@ import yaml from 'js-yaml';
 
 const WORKS = 'src/content/works';
 const ESSAYS = 'src/content/essays';
+const HEROES = 'src/content/heroes';
 
 /**
  * Обсяг варіантів есе — за домовленістю в CLAUDE.md, з невеликим запасом.
@@ -55,7 +56,7 @@ const warnings = [];
  * Ліміти схеми (src/content.config.ts), які Astro перевіряє лише на білді:
  * без цих перевірок `npm run check` чистий, а `npm run build` падає.
  */
-const LIMITS = { description: 220, works: { title: 140 }, essays: { title: 160 } };
+const LIMITS = { description: 220, works: { title: 140 }, essays: { title: 160 }, heroes: { title: 140 } };
 
 const read = (dir, file) => {
   const raw = fs.readFileSync(path.join(dir, file), 'utf8');
@@ -68,7 +69,7 @@ const read = (dir, file) => {
     return { data: yaml.load(raw.slice(3)) ?? {}, body: '', raw };
   }
   const data = yaml.load(raw.slice(3, end));
-  const kind = dir === WORKS ? 'works' : 'essays';
+  const kind = dir === WORKS ? 'works' : dir.startsWith(HEROES) ? 'heroes' : 'essays';
   if ((data.description ?? '').length > LIMITS.description) {
     errors.push(`${slug}: description — ${data.description.length} знаків, ліміт ${LIMITS.description}`);
   }
@@ -83,10 +84,13 @@ const list = (dir) => fs.readdirSync(dir).filter((f) => f.endsWith('.md') && !f.
 
 // ── Твори ────────────────────────────────────────────────────────────────
 const workSlugs = new Set();
+const workData = new Map();
 for (const file of list(WORKS)) {
   const slug = file.replace(/\.md$/, '');
   workSlugs.add(slug);
-  const { data, raw } = read(WORKS, file);
+  const { data, raw, body } = read(WORKS, file);
+  // Режим «без цитування» (автори з чинними правами) — його мусять успадкувати й характеристики
+  workData.set(slug, { data, noQuotes: body.includes('**Про цей розбір.**') });
 
   // Поезія без віршознавчого паспорта — половина сторінки просто порожня.
   if (data.kind === 'поезія' && !data.poem) {
@@ -153,8 +157,47 @@ for (const file of list(ESSAYS)) {
   }
 }
 
+// ── Характеристики героїв ────────────────────────────────────────────────
+let heroCount = 0;
+if (fs.existsSync(HEROES)) {
+  for (const entry of fs.readdirSync(HEROES, { withFileTypes: true })) {
+    if (!entry.isDirectory()) {
+      if (entry.name.endsWith('.md')) errors.push(`heroes/${entry.name}: файл має лежати в теці твору — heroes/<work-slug>/<hero>.md`);
+      continue;
+    }
+    const work = workData.get(entry.name);
+    for (const file of list(path.join(HEROES, entry.name))) {
+      heroCount++;
+      const id = `heroes/${entry.name}/${file}`;
+      if (!work) {
+        errors.push(`${id}: теки «${entry.name}» немає серед розборів — сторінка не збереться`);
+        continue;
+      }
+      const { data, raw, body } = read(path.join(HEROES, entry.name), file);
+      // Ім’я — ключ посилання з блоку «Головні герої»; розбіжність = мовчки немає лінка
+      const names = (work.data.characters ?? []).map((c) => c.name);
+      if (!names.includes(data.name)) {
+        errors.push(`${id}: name «${data.name}» не збігається з жодним characters[].name розбору (${names.join(', ') || 'героїв немає'})`);
+      }
+      if (work.noQuotes && (data.quotes ?? []).length) {
+        errors.push(`${id}: розбір у режимі без цитування, а характеристика має ${data.quotes.length} цитат`);
+      }
+      if (LATIN_IN_CYRILLIC.test(raw)) {
+        const line = raw.split('\n').find((l) => LATIN_IN_CYRILLIC.test(l));
+        warnings.push(`${id}: латиниця в кириличному слові: «${line.trim().slice(0, 80)}»`);
+      }
+      const n = words(body);
+      if (n < 350) warnings.push(`${id}: тіло лише ${n} слів — характеристика замала (орієнтир 500–900)`);
+      if ((body.match(/^## /gm) ?? []).length < 3) warnings.push(`${id}: у тілі менше трьох розділів «##»`);
+      for (const c of CLICHES) {
+        if (raw.toLowerCase().includes(c)) warnings.push(`${id}: штамп «${c}»`);
+      }
+    }
+  }
+}
+
 // ── Звіт ─────────────────────────────────────────────────────────────────
-console.log(`Розборів: ${workSlugs.size} · есе: ${list(ESSAYS).length}`);
+console.log(`Розборів: ${workSlugs.size} · есе: ${list(ESSAYS).length} · характеристик: ${heroCount}`);
 for (const w of warnings) console.log(`  ⚠ ${w}`);
 for (const e of errors) console.log(`  ✗ ${e}`);
 

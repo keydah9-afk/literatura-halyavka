@@ -1,12 +1,13 @@
 ---
 import Base from '../../layouts/Base.astro';
 import Breadcrumbs from '../../components/Breadcrumbs.astro';
-import { getWorks, getEssays, essaysForWork, plural } from '../../lib/content';
+import { getWorks, getEssays, getHeroes, essaysForWork, plural } from '../../lib/content';
 import { CLASSES } from '../../data/site';
 import { NMT_WORKS } from '../../data/nmt';
 
 const works = (await getWorks()).sort((a, b) => a.data.title.localeCompare(b.data.title, 'uk'));
 const essays = await getEssays();
+const heroCount = (await getHeroes()).length;
 const nmt = new Set(NMT_WORKS.map((w) => w.slug));
 const nmtCount = works.filter((w) => nmt.has(w.id)).length;
 ---
@@ -22,6 +23,9 @@ const nmtCount = works.filter((w) => nmt.has(w.id)).length;
       {works.length} {plural(works.length, ['твір', 'твори', 'творів'])} з переказом у трьох рівнях, паспортом, героями й тестом.
       Клас — лише орієнтир: той самий твір у різних школах вчать у різні роки.
     </p>
+    {heroCount > 0 && (
+      <p class="mt-2 font-sans text-sm"><a href="/heroyi/" class="font-semibold text-brand hover:underline">Характеристики героїв ({heroCount}) →</a></p>
+    )}
 
     <div class="mt-6 flex flex-wrap gap-2 font-sans text-sm" role="group" aria-label="Фільтр за класом">
       <button type="button" data-filter="all" class="filter-btn is-active">Усі <span class="opacity-60">{works.length}</span></button>

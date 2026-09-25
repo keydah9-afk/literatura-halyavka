@@ -1,0 +1,44 @@
+---
+import Base from '../../layouts/Base.astro';
+import Breadcrumbs from '../../components/Breadcrumbs.astro';
+import { getWorks, getHeroes, heroWork, heroUrl, plural } from '../../lib/content';
+
+const works = await getWorks();
+const heroes = await getHeroes();
+const groups = works
+  .map((w) => ({ work: w, items: heroes.filter((h) => heroWork(h) === w.id) }))
+  .filter((g) => g.items.length)
+  .sort((a, b) => Math.min(...a.work.data.classes) - Math.min(...b.work.data.classes) || a.work.data.title.localeCompare(b.work.data.title, 'uk'));
+---
+
+<Base
+  title="Характеристики героїв творів з української літератури 5–11 клас"
+  description="Характеристика й образ героя: риси характеру з епізодами, розвиток персонажа, ставлення автора і план характеристики для уроку."
+>
+  <div class="mx-auto max-w-4xl px-4 py-8">
+    <Breadcrumbs items={[{ label: 'Характеристики героїв' }]} />
+    <h1 class="font-sans text-3xl font-extrabold tracking-tight text-heading sm:text-4xl">Характеристики героїв</h1>
+    <p class="mt-2 max-w-reading font-serif text-lg text-muted">
+      Риси характеру з доказами з тексту, як герой змінюється, що про нього думає автор, і план —
+      щоб скласти характеристику самому. Зараз {heroes.length} {plural(heroes.length, ['сторінка', 'сторінки', 'сторінок'])}.
+    </p>
+
+    {groups.map((g) => (
+      <section class="mt-8">
+        <h2 class="font-sans text-xl font-bold text-heading">
+          <a href={`/tvory/${g.work.id}/`} class="hover:text-brand">«{g.work.data.title}»</a>
+        </h2>
+        <p class="mb-3 font-sans text-sm text-muted">{g.work.data.author ?? 'народна творчість'} · {g.work.data.classes.join(', ')} клас</p>
+        <ul class="flex flex-wrap gap-2">
+          {g.items.map((h) => (
+            <li>
+              <a href={heroUrl(h)} class="inline-block rounded-lg border border-line bg-surface px-3 py-2 font-sans text-sm font-medium text-heading transition hover:border-brand hover:text-brand">{h.data.title}</a>
+            </li>
+          ))}
+        </ul>
+      </section>
+    ))}
+
+    {heroes.length === 0 && <p class="mt-8 text-muted">Характеристики з’являться найближчим часом.</p>}
+  </div>
+</Base>
