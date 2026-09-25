@@ -29,6 +29,7 @@ const isActive = (href: string) => path === href || path.startsWith(href + '/');
       }
       <span class="mx-1 h-5 w-px shrink-0 bg-line"></span>
       <a href="/pysmennyky/" class:list={['shrink-0 rounded-lg px-2.5 py-1.5 font-medium transition', isActive('/pysmennyky') ? 'bg-brand text-white' : 'text-muted hover:text-heading']}>Письменники</a>
+      <a href="/tvory/" class:list={['shrink-0 rounded-lg px-2.5 py-1.5 font-medium transition', path === '/tvory/' ? 'bg-brand text-white' : 'text-muted hover:text-heading']}>Розбори</a>
       <a href="/tvir-na-temu/" class:list={['shrink-0 rounded-lg px-2.5 py-1.5 font-medium transition', isActive('/tvir-na-temu') ? 'bg-brand text-white' : 'text-muted hover:text-heading']}>Твори</a>
       <a href="/napamyat/" class:list={['hidden shrink-0 rounded-lg px-2.5 py-1.5 font-medium transition md:block', isActive('/napamyat') ? 'bg-brand text-white' : 'text-muted hover:text-heading']}>Напам’ять</a>
       <a href="/nmt/" class:list={['shrink-0 rounded-lg px-2.5 py-1.5 font-bold transition', isActive('/nmt') ? 'bg-brand text-white' : 'text-brand hover:bg-brand/10']}>НМТ</a>

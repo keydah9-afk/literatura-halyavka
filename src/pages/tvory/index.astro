@@ -1,0 +1,106 @@
+---
+import Base from '../../layouts/Base.astro';
+import Breadcrumbs from '../../components/Breadcrumbs.astro';
+import { getWorks, getEssays, essaysForWork, plural } from '../../lib/content';
+import { CLASSES } from '../../data/site';
+import { NMT_WORKS } from '../../data/nmt';
+
+const works = (await getWorks()).sort((a, b) => a.data.title.localeCompare(b.data.title, 'uk'));
+const essays = await getEssays();
+const nmt = new Set(NMT_WORKS.map((w) => w.slug));
+const nmtCount = works.filter((w) => nmt.has(w.id)).length;
+---
+
+<Base
+  title="Короткий зміст і аналіз творів з української літератури — усі розбори"
+  description={`Усі ${works.length} розборів творів з української літератури 5–11 класу: короткий зміст, паспорт твору, герої, цитати й тест. Фільтр за класом і НМТ.`}
+>
+  <div class="mx-auto max-w-4xl px-4 py-8">
+    <Breadcrumbs items={[{ label: 'Розбори творів' }]} />
+    <h1 class="font-sans text-3xl font-extrabold tracking-tight text-heading sm:text-4xl">Розбори творів</h1>
+    <p class="mt-2 max-w-reading font-serif text-lg text-muted">
+      {works.length} {plural(works.length, ['твір', 'твори', 'творів'])} з переказом у трьох рівнях, паспортом, героями й тестом.
+      Клас — лише орієнтир: той самий твір у різних школах вчать у різні роки.
+    </p>
+
+    <div class="mt-6 flex flex-wrap gap-2 font-sans text-sm" role="group" aria-label="Фільтр за класом">
+      <button type="button" data-filter="all" class="filter-btn is-active">Усі <span class="opacity-60">{works.length}</span></button>
+      {CLASSES.map((k) => {
+        const n = works.filter((w) => w.data.classes.includes(k)).length;
+        return n > 0 && <button type="button" data-filter={String(k)} class="filter-btn">{k} клас <span class="opacity-60">{n}</span></button>;
+      })}
+      <button type="button" data-filter="nmt" class="filter-btn">НМТ <span class="opacity-60">{nmtCount}</span></button>
+    </div>
+    <label class="mt-3 block">
+      <span class="sr-only">Шукати у списку</span>
+      <input id="works-q" type="search" placeholder="Назва або автор…" class="w-full rounded-lg border border-line bg-surface px-3 py-2 font-sans text-sm text-heading placeholder:text-muted focus:border-brand focus:outline-none" />
+    </label>
+
+    <ul id="works-list" class="mt-5 space-y-2">
+      {works.map((w) => {
+        const e = essaysForWork(essays, w.id).length;
+        const tags = [...w.data.classes.map(String), ...(nmt.has(w.id) ? ['nmt'] : [])].join(' ');
+        return (
+          <li data-tags={tags} data-text={`${w.data.title} ${w.data.author ?? ''}`.toLowerCase()}>
+            <a href={`/tvory/${w.id}/`} class="group flex items-baseline justify-between gap-3 rounded-lg border border-line bg-surface px-4 py-3 transition hover:border-brand/60">
+              <span>
+                <span class="font-sans text-[0.98rem] font-semibold text-heading group-hover:text-brand">{w.data.title}</span>
+                {w.data.author && <span class="ml-2 font-sans text-sm text-muted">{w.data.author}</span>}
+                <span class="mt-0.5 line-clamp-1 font-sans text-xs text-muted">
+                  {w.data.passport.genre} · {w.data.classes.join(', ')} клас{nmt.has(w.id) && ' · НМТ'}{w.data.byHeart && ' · напам’ять'}
+                </span>
+              </span>
+              {e > 0 && <span class="shrink-0 rounded-md bg-line/60 px-2 py-0.5 font-sans text-xs text-muted" title="Теми шкільних творів">✍️ {e}</span>}
+            </a>
+          </li>
+        );
+      })}
+    </ul>
+    <p id="works-empty" class="mt-6 hidden text-muted">Нічого не знайшли. Спробуй інший клас або <a href="/poshuk/" class="text-brand underline">повний пошук</a>.</p>
+  </div>
+</Base>
+
+<style>
+  .filter-btn {
+    border-radius: 0.75rem;
+    border: 1px solid var(--color-line);
+    background: var(--color-surface);
+    padding: 0.4rem 0.8rem;
+    font-weight: 600;
+    color: var(--color-heading);
+    transition: border-color 0.15s, color 0.15s;
+  }
+  .filter-btn:hover { border-color: var(--color-brand); color: var(--color-brand); }
+  .filter-btn.is-active { border-color: var(--color-brand); background: var(--color-brand); color: #fff; }
+</style>
+
+<script>
+  const buttons = [...document.querySelectorAll<HTMLButtonElement>('[data-filter]')];
+  const items = [...document.querySelectorAll<HTMLLIElement>('#works-list > li')];
+  const q = document.getElementById('works-q') as HTMLInputElement;
+  const empty = document.getElementById('works-empty')!;
+  let filter = new URLSearchParams(location.search).get('klas') || 'all';
+
+  function apply() {
+    const text = q.value.trim().toLowerCase();
+    let shown = 0;
+    for (const li of items) {
+      const ok = (filter === 'all' || li.dataset.tags!.split(' ').includes(filter)) && (!text || li.dataset.text!.includes(text));
+      li.hidden = !ok;
+      if (ok) shown++;
+    }
+    buttons.forEach((b) => b.classList.toggle('is-active', b.dataset.filter === filter));
+    empty.classList.toggle('hidden', shown > 0);
+  }
+  buttons.forEach((b) =>
+    b.addEventListener('click', () => {
+      filter = b.dataset.filter!;
+      const url = new URL(location.href);
+      filter === 'all' ? url.searchParams.delete('klas') : url.searchParams.set('klas', filter);
+      history.replaceState(null, '', url);
+      apply();
+    }),
+  );
+  q.addEventListener('input', apply);
+  apply();
+</script>
