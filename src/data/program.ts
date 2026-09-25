@@ -232,7 +232,7 @@ export const PROGRAM: ProgramClass[] = [
       {
         title: 'Пісні: історичні, родинно-побутові, балади',
         works: [
-          { slug: 'za-svit-vstaly-kozachenky', title: 'Засвіт встали козаченьки', author: 'Маруся Чурай', authorSlug: 'marusya-churaj', genre: 'пісня', kind: 'фольклор' },
+          { slug: 'za-svit-vstaly-kozachenky', title: 'Засвіт встали козаченьки', author: 'Маруся Чурай', authorSlug: 'marusya-churaj', genre: 'пісня', kind: 'фольклор', byHeart: true },
           { slug: 'viyut-vitry-viyut-bujni', title: 'Віють вітри, віють буйні', author: 'Маруся Чурай', authorSlug: 'marusya-churaj', genre: 'пісня', kind: 'фольклор' },
           { slug: 'oj-ne-hody-hrytsyu', title: 'Ой не ходи, Грицю, та й на вечорниці', author: 'Маруся Чурай', authorSlug: 'marusya-churaj', genre: 'балада-пісня', kind: 'фольклор' },
           { slug: 'oj-letila-strila', title: 'Ой летіла стріла', genre: 'балада', kind: 'фольклор' },
@@ -246,7 +246,7 @@ export const PROGRAM: ProgramClass[] = [
           { slug: 'meni-odnakovo', title: 'Мені однаково, чи буду…', author: 'Тарас Шевченко', authorSlug: 'taras-shevchenko', genre: 'громадянська лірика', kind: 'поезія' },
           { slug: 'contra-spem-spero', title: 'Contra spem spero!', author: 'Леся Українка', authorSlug: 'lesya-ukrayinka', genre: 'громадянська лірика', kind: 'поезія', byHeart: true },
           { slug: 'davnya-vesna', title: 'Давня весна', author: 'Леся Українка', authorSlug: 'lesya-ukrayinka', genre: 'пейзажна лірика', kind: 'поезія' },
-          { slug: 'hotila-b-ya-pisneyu-staty', title: 'Хотіла б я піснею стати', author: 'Леся Українка', authorSlug: 'lesya-ukrayinka', genre: 'лірика', kind: 'поезія' },
+          { slug: 'hotila-b-ya-pisneyu-staty', title: 'Хотіла б я піснею стати', author: 'Леся Українка', authorSlug: 'lesya-ukrayinka', genre: 'лірика', kind: 'поезія', byHeart: true },
           { slug: 'lyubit-ukrayinu', title: 'Любіть Україну', author: 'Володимир Сосюра', authorSlug: 'volodymyr-sosyura', genre: 'громадянська лірика', kind: 'поезія', byHeart: true },
           { slug: 'sosyura-vasylky', title: 'Васильки', author: 'Володимир Сосюра', authorSlug: 'volodymyr-sosyura', genre: 'інтимна лірика', kind: 'поезія' },
           { slug: 'pidpalyj-tyha-elehiya', title: 'Тиха елегія', author: 'Володимир Підпалий', authorSlug: 'volodymyr-pidpalyj', genre: 'елегія', kind: 'поезія' },

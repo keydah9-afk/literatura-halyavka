@@ -51,10 +51,31 @@ const CLICHES = ['даний твір', 'дана поема', 'у наш час
 const errors = [];
 const warnings = [];
 
+/**
+ * Ліміти схеми (src/content.config.ts), які Astro перевіряє лише на білді:
+ * без цих перевірок `npm run check` чистий, а `npm run build` падає.
+ */
+const LIMITS = { description: 220, works: { title: 140 }, essays: { title: 160 } };
+
 const read = (dir, file) => {
   const raw = fs.readFileSync(path.join(dir, file), 'utf8');
   const end = raw.indexOf('\n---', 3);
-  return { data: yaml.load(raw.slice(3, end)), body: raw.slice(end + 4), raw };
+  const slug = file.replace(/\.md$/, '');
+  if (end === -1) {
+    // Без другого «---» Astro не бачить frontmatter взагалі, а YAML-парсер тут
+    // мовчки з'їдає весь файл, тож помилка лишалася непоміченою до білда.
+    errors.push(`${slug}: frontmatter не закрито — немає другого рядка «---»`);
+    return { data: yaml.load(raw.slice(3)) ?? {}, body: '', raw };
+  }
+  const data = yaml.load(raw.slice(3, end));
+  const kind = dir === WORKS ? 'works' : 'essays';
+  if ((data.description ?? '').length > LIMITS.description) {
+    errors.push(`${slug}: description — ${data.description.length} знаків, ліміт ${LIMITS.description}`);
+  }
+  if ((data.title ?? '').length > LIMITS[kind].title) {
+    errors.push(`${slug}: title — ${data.title.length} знаків, ліміт ${LIMITS[kind].title}`);
+  }
+  return { data, body: raw.slice(end + 4), raw };
 };
 
 const words = (s) => s.trim().split(/\s+/).length;
@@ -71,7 +92,8 @@ for (const file of list(WORKS)) {
   if (data.kind === 'поезія' && !data.poem) {
     errors.push(`${slug}: kind «поезія», але немає блоку poem (розмір, римування, ліричний герой)`);
   }
-  if (data.poem && data.kind !== 'поезія') {
+  // Фольклорна пісня чи дума теж має віршознавчий паспорт (розмір, рима, строфа).
+  if (data.poem && data.kind !== 'поезія' && data.kind !== 'фольклор') {
     warnings.push(`${slug}: є блок poem, але kind = «${data.kind}»`);
   }
 
