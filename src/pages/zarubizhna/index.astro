@@ -1,0 +1,62 @@
+---
+import Base from '../../layouts/Base.astro';
+import Breadcrumbs from '../../components/Breadcrumbs.astro';
+import Callout from '../../components/Callout.astro';
+import { ZAR_PROGRAM, zarClassByNumber } from '../../data/zarubizhna';
+import { readyWorkSlugs, getWorks, getEssays, essaysOfSubject, worksOfSubject, plural } from '../../lib/content';
+import { CLASSES } from '../../data/site';
+
+const ready = await readyWorkSlugs();
+const works = await getWorks();
+const zarWorks = worksOfSubject(works, 'zar');
+const zarEssays = essaysOfSubject(await getEssays(), works, 'zar');
+
+const cards = CLASSES.map((k) => {
+  const c = zarClassByNumber(k);
+  const total = c ? c.sections.reduce((n, s) => n + s.works.length, 0) : 0;
+  const done = c ? c.sections.reduce((n, s) => n + s.works.filter((w) => ready.has(w.slug)).length, 0) : 0;
+  return { klas: k, tagline: c?.tagline, total, done, hasCatalog: !!c };
+});
+const opened = cards.filter((c) => c.hasCatalog).map((c) => c.klas);
+---
+
+<Base
+  title="Зарубіжна література 5–11 клас — короткий зміст, аналіз, твори"
+  description="Зарубіжна література за шкільною програмою: короткий зміст і аналіз творів, характеристики героїв, цитати та готові шкільні твори. Починаємо з 5 класу."
+>
+  <div class="mx-auto max-w-4xl px-4 py-8">
+    <Breadcrumbs items={[{ label: 'Зарубіжна література' }]} />
+    <h1 class="font-sans text-3xl font-extrabold tracking-tight text-heading sm:text-4xl">Зарубіжна література</h1>
+    <p class="mt-2 max-w-reading font-serif text-lg text-muted">
+      Казки світу, «Снігова королева», «Пригоди Тома Соєра», «Мауглі» — розбори тих книжок, які задають у школі.
+      Відкрито: {opened.join(', ')} клас; решту класів додаємо по черзі.
+    </p>
+    {zarWorks.length > 0 && (
+      <p class="mt-2 font-sans text-sm text-muted">
+        Готово: {zarWorks.length} {plural(zarWorks.length, ['розбір', 'розбори', 'розборів'])}
+        {zarEssays.length > 0 && <> · {zarEssays.length}{' '}{plural(zarEssays.length, ['тема', 'теми', 'тем'])} для творів</>}
+      </p>
+    )}
+
+    <div class="mt-6 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+      {cards.map((c) => c.hasCatalog ? (
+        <a href={`/zarubizhna/${c.klas}-klas/`} class="group rounded-xl border border-line bg-surface p-4 transition hover:border-brand/60">
+          <p class="font-sans text-lg font-bold text-heading group-hover:text-brand">{c.klas} клас</p>
+          {c.tagline && <p class="mt-0.5 font-sans text-sm text-muted">{c.tagline}</p>}
+          <p class="mt-2 font-sans text-xs text-muted">{c.total} {plural(c.total, ['твір', 'твори', 'творів'])} у програмі · готово {c.done}</p>
+        </a>
+      ) : (
+        <div class="rounded-xl border border-dashed border-line p-4 opacity-70">
+          <p class="font-sans text-lg font-bold text-muted">{c.klas} клас</p>
+          <p class="mt-2 font-sans text-xs text-muted">готуємо</p>
+        </div>
+      ))}
+    </div>
+
+    <Callout tone="info" title="Українська література — окремо">
+      Розбори творів із української літератури лежать у своїх класах: <a href="/5-klas/" class="text-brand underline">5 клас</a>,
+      <a href="/6-klas/" class="text-brand underline">6 клас</a> і далі. Усі розбори обох предметів — на сторінці
+      <a href="/tvory/" class="text-brand underline">«Розбори творів»</a>, де їх можна відфільтрувати.
+    </Callout>
+  </div>
+</Base>

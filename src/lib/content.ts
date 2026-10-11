@@ -21,6 +21,31 @@ export function heroesForWork(heroes: CollectionEntry<'heroes'>[], workSlug: str
   return heroes.filter((h) => heroWork(h) === workSlug);
 }
 
+export type Subject = 'ukr' | 'zar';
+
+export const SUBJECT_NAME: Record<Subject, string> = {
+  ukr: 'Українська література',
+  zar: 'Зарубіжна література',
+};
+
+/** Твори одного предмета. */
+export function worksOfSubject<T extends { data: { subject: Subject } }>(works: T[], subject: Subject) {
+  return works.filter((w) => w.data.subject === subject);
+}
+
+/**
+ * Есе одного предмета. У есе немає власного `subject`: предмет — це предмет твору,
+ * за яким воно написане (`workSlug`), тож розбіжності між ними бути не може.
+ */
+export function essaysOfSubject(
+  essays: CollectionEntry<'essays'>[],
+  works: CollectionEntry<'works'>[],
+  subject: Subject,
+) {
+  const zar = new Set(worksOfSubject(works, 'zar').map((w) => w.id));
+  return essays.filter((e) => zar.has(e.data.workSlug) === (subject === 'zar'));
+}
+
 export async function getAuthors() {
   return (await getCollection('authors')).filter(isPublished);
 }

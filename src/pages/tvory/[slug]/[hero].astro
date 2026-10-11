@@ -8,6 +8,7 @@ import QuoteList from '../../../components/QuoteList.astro';
 import Tag from '../../../components/Tag.astro';
 import { getWorks, getEssays, getHeroes, heroWork, heroUrl, heroesForWork, essaysForWork } from '../../../lib/content';
 import { SITE } from '../../../data/site';
+import { klasHref, subjectCrumbs } from '../../../lib/catalog';
 
 export async function getStaticPaths() {
   const works = await getWorks();
@@ -54,7 +55,7 @@ const jsonLd = {
 <Base {title} {description} type="article" {jsonLd}>
   <div class="mx-auto grid max-w-6xl gap-10 px-4 py-8 lg:grid-cols-[1fr_15rem]">
     <article class="min-w-0 max-w-reading">
-      <Breadcrumbs items={[{ label: `${w.classes[0]} клас`, href: `/${w.classes[0]}-klas/` }, { label: w.title, href: workUrl }, { label: d.name }]} />
+      <Breadcrumbs items={[...subjectCrumbs(w.subject, w.classes[0]), { label: w.title, href: workUrl }, { label: d.name }]} />
 
       <h1 class="font-sans text-3xl font-extrabold leading-tight tracking-tight text-heading sm:text-4xl">{d.title}</h1>
       <p class="mt-1.5 font-sans text-base text-muted">
@@ -62,7 +63,7 @@ const jsonLd = {
       </p>
       <div class="mt-3 flex flex-wrap gap-1.5">
         <Tag tone="brand">{d.role}</Tag>
-        {w.classes.map((k) => <Tag tone="ink" href={`/${k}-klas/`}>{k} клас</Tag>)}
+        {w.classes.map((k) => <Tag tone="ink" href={klasHref(w.subject, k)}>{k} клас</Tag>)}
       </div>
 
       <Callout tone="key" title="Якщо часу зовсім немає" icon="⏱">

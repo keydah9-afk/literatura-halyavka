@@ -1,0 +1,85 @@
+---
+import Base from '../../../layouts/Base.astro';
+import Breadcrumbs from '../../../components/Breadcrumbs.astro';
+import WorkCard from '../../../components/WorkCard.astro';
+import Callout from '../../../components/Callout.astro';
+import { ZAR_PROGRAM } from '../../../data/zarubizhna';
+import { classByNumber } from '../../../data/program';
+import { groupByChoice } from '../../../lib/catalog';
+import { readyWorkSlugs, getWorks, getEssays, essaysOfSubject, plural } from '../../../lib/content';
+
+export async function getStaticPaths() {
+  return ZAR_PROGRAM.map((c) => ({ params: { klas: String(c.klas) }, props: { klasData: c } }));
+}
+
+const { klasData } = Astro.props;
+const ready = await readyWorkSlugs();
+const essays = essaysOfSubject(await getEssays(), await getWorks(), 'zar').filter((e) => e.data.classes.includes(klasData.klas));
+const total = klasData.sections.reduce((n, s) => n + s.works.length, 0);
+const done = klasData.sections.reduce((n, s) => n + s.works.filter((w) => ready.has(w.slug)).length, 0);
+const hasUkr = !!classByNumber(klasData.klas);
+
+const title = `Зарубіжна література ${klasData.klas} клас — короткий зміст усіх творів`;
+const description = `Усі твори програми ${klasData.klas} класу із зарубіжної літератури: короткий зміст, аналіз, характеристики героїв і готові твори. Є всі варіанти «за вибором учителя».`;
+---
+
+<Base {title} {description}>
+  <div class="mx-auto max-w-4xl px-4 py-8">
+    <Breadcrumbs items={[{ label: 'Зарубіжна література', href: '/zarubizhna/' }, { label: `${klasData.klas} клас` }]} />
+
+    <h1 class="font-sans text-3xl font-extrabold tracking-tight text-heading sm:text-4xl">
+      Зарубіжна література, {klasData.klas} клас
+    </h1>
+    <p class="mt-1 font-sans text-base text-brand">{klasData.tagline}</p>
+    <p class="mt-3 max-w-reading font-serif text-lg leading-relaxed">{klasData.intro}</p>
+
+    <p class="mt-4 font-sans text-sm text-muted">
+      У програмі {total} {plural(total, ['твір', 'твори', 'творів'])} · готово сторінок: {done}
+      {essays.length > 0 && <> · тем для творів: {essays.length}</>}
+    </p>
+
+    {hasUkr && (
+      <a href={`/${klasData.klas}-klas/`} class="mt-4 flex items-center justify-between gap-3 rounded-xl border border-brand/30 bg-cream px-4 py-3 font-sans transition hover:border-brand dark:bg-white/5">
+        <span>
+          <span class="block text-xs font-bold uppercase tracking-wide text-brand">Другий предмет</span>
+          <span class="text-[0.98rem] font-semibold text-heading">Українська література, {klasData.klas} клас</span>
+        </span>
+        <span class="text-brand" aria-hidden="true">→</span>
+      </a>
+    )}
+
+    {klasData.sections.map((section) => (
+      <section class="mt-8">
+        <h2 class="font-sans text-xl font-bold text-heading">{section.title}</h2>
+        {section.note && <p class="mt-0.5 mb-3 font-sans text-sm text-muted">{section.note}</p>}
+        <div class:list={['space-y-2', !section.note && 'mt-3']}>
+          {groupByChoice(section.works).map((group) =>
+            group.choice && group.works.length > 1 ? (
+              <div class="rounded-xl border border-brand/30 bg-brand/5 p-2.5">
+                <p class="mb-2 px-1.5 font-sans text-xs font-bold uppercase tracking-wide text-brand">
+                  {section.choices?.[group.choice] ?? 'Один твір — за вибором учителя'}
+                </p>
+                <div class="space-y-2">
+                  {group.works.map((w) => <WorkCard work={w} ready={ready.has(w.slug)} />)}
+                </div>
+              </div>
+            ) : (
+              group.works.map((w) => <WorkCard work={w} ready={ready.has(w.slug)} />)
+            ),
+          )}
+        </div>
+      </section>
+    ))}
+
+    <Callout tone="info" title="Чому тут більше творів, ніж у твоєму зошиті">
+      Програма зарубіжної літератури дозволяє вчителю обирати: «одну з двох казок», «один твір із трьох».
+      Тому в рамках вище — усі варіанти, а ти шукай той, який задали вам. Перекладів теж кілька, і назви
+      героїв у них можуть відрізнятися; ми пишемо за одним українським перекладом і вказуємо його на сторінці твору.
+    </Callout>
+    <Callout tone="key" title="Список складено за однією програмою" icon="📘">
+      Це модельна програма О. Ніколенко, О. Ісаєва та ін. (редакція 2023 року). Якщо ваша школа вчиться
+      за іншою, частина творів може бути іншою — тоді подивись усі розбори в <a href="/tvory/" class="text-brand underline">загальному списку</a>
+      або скористайся <a href="/poshuk/" class="text-brand underline">пошуком</a>.
+    </Callout>
+  </div>
+</Base>

@@ -12,7 +12,7 @@ const groups = works
 ---
 
 <Base
-  title="Характеристики героїв творів з української літератури 5–11 клас"
+  title="Характеристики героїв літературних творів 5–11 клас"
   description="Характеристика й образ героя: риси характеру з епізодами, розвиток персонажа, ставлення автора і план характеристики для уроку."
 >
   <div class="mx-auto max-w-4xl px-4 py-8">
@@ -28,7 +28,7 @@ const groups = works
         <h2 class="font-sans text-xl font-bold text-heading">
           <a href={`/tvory/${g.work.id}/`} class="hover:text-brand">«{g.work.data.title}»</a>
         </h2>
-        <p class="mb-3 font-sans text-sm text-muted">{g.work.data.author ?? 'народна творчість'} · {g.work.data.classes.join(', ')} клас</p>
+        <p class="mb-3 font-sans text-sm text-muted">{g.work.data.author ?? 'народна творчість'} · {g.work.data.classes.join(', ')} клас{g.work.data.subject === 'zar' ? ' · зарубіжна література' : ''}</p>
         <ul class="flex flex-wrap gap-2">
           {g.items.map((h) => (
             <li>

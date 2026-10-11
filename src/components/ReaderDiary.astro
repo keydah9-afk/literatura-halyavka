@@ -1,0 +1,90 @@
+---
+/**
+ * «Читацький щоденник» — готова основа запису, зібрана з даних самого розбору
+ * (автор, жанр, герої, «про що»). Нічого нового писати не треба: учень дописує
+ * лише власне враження й копіює запис у зошит. Нічого нікуди не надсилається.
+ */
+interface Props {
+  title: string;
+  author?: string;
+  genre: string;
+  heroes: string[];
+  summary: string;
+  isPoem?: boolean;
+  mood?: string;
+}
+const { title, author, genre, heroes, summary, isPoem = false, mood } = Astro.props;
+
+const rows: { label: string; value: string }[] = [
+  { label: 'Автор', value: author ?? 'народна творчість' },
+  { label: 'Назва', value: title },
+  { label: 'Жанр', value: genre },
+  ...(isPoem
+    ? mood ? [{ label: 'Настрій вірша', value: mood }] : []
+    : heroes.length ? [{ label: 'Головні герої', value: heroes.slice(0, 4).join(', ') }] : []),
+  { label: 'Про що', value: summary },
+];
+---
+<section id="shchodennyk" class="no-print">
+  <h2 class="mb-1 font-sans text-2xl font-bold text-heading">Читацький щоденник</h2>
+  <p class="mb-3 font-sans text-sm text-muted">Готова основа запису. Допиши своє враження й скопіюй у зошит — останній рядок має бути твоїм, а не чужим.</p>
+
+  <div class="rounded-xl border border-line bg-surface p-4" data-diary>
+    <dl class="space-y-2">
+      {rows.map((r) => (
+        <div class="grid gap-0.5 sm:grid-cols-[9rem_1fr] sm:gap-3" data-diary-row data-label={r.label}>
+          <dt class="font-sans text-sm font-semibold text-heading">{r.label}</dt>
+          <dd class="text-[0.98rem] leading-relaxed" data-value>{r.value}</dd>
+        </div>
+      ))}
+    </dl>
+
+    <label for="diary-impression" class="mt-3 block font-sans text-sm font-semibold text-heading">Що мені сподобалося</label>
+    <textarea id="diary-impression" rows="3" data-impression
+      class="mt-1 w-full rounded-lg border border-line bg-surface p-3 text-[0.98rem] leading-relaxed focus:border-brand focus:outline-none"
+      placeholder="Мені сподобалося…"></textarea>
+
+    <div class="mt-3 flex flex-wrap items-center gap-3">
+      <button type="button" data-copy class="rounded-lg bg-brand px-4 py-2 font-sans text-sm font-semibold text-white transition hover:opacity-90">Скопіювати запис</button>
+      <span class="font-sans text-sm text-muted" data-status role="status" aria-live="polite"></span>
+    </div>
+  </div>
+</section>
+
+<script>
+  function initDiary() {
+    document.querySelectorAll<HTMLElement>('[data-diary]').forEach((box) => {
+      if (box.dataset.bound) return;
+      box.dataset.bound = '1';
+      const btn = box.querySelector<HTMLButtonElement>('[data-copy]');
+      const status = box.querySelector<HTMLElement>('[data-status]');
+      const textarea = box.querySelector<HTMLTextAreaElement>('[data-impression]');
+      btn?.addEventListener('click', async () => {
+        const lines = [...box.querySelectorAll<HTMLElement>('[data-diary-row]')].map(
+          (row) => `${row.dataset.label}: ${row.querySelector('[data-value]')?.textContent?.trim() ?? ''}`
+        );
+        const own = textarea?.value.trim();
+        lines.push(`Що мені сподобалося: ${own || '…'}`);
+        const text = lines.join('\n');
+        let ok = false;
+        try {
+          await navigator.clipboard.writeText(text);
+          ok = true;
+        } catch {
+          // старі браузери й непряме відкриття: виділяємо поле й копіюємо через execCommand
+          const tmp = document.createElement('textarea');
+          tmp.value = text;
+          tmp.style.position = 'fixed';
+          tmp.style.opacity = '0';
+          document.body.appendChild(tmp);
+          tmp.select();
+          try { ok = document.execCommand('copy'); } catch { ok = false; }
+          tmp.remove();
+        }
+        if (status) status.textContent = ok ? 'Скопійовано' : 'Не вдалося скопіювати — виділи текст вручну';
+      });
+    });
+  }
+  initDiary();
+  document.addEventListener('astro:page-load', initDiary);
+</script>

@@ -6,11 +6,19 @@ interface Props {
     composition?: string; conflict?: string; narrator?: string; setting?: string;
   };
   author?: string;
+  /** Зарубіжка: «оригінал і переклад» — окреме поняття програми 5 класу */
+  original?: { title: string; language: string; year?: string };
+  translator?: string;
 }
-const { passport: p, author } = Astro.props;
+const { passport: p, author, original, translator } = Astro.props;
+const originalLine = original
+  ? [`«${original.title}»`, `мова оригіналу — ${original.language}`, original.year && `${original.year} р.`].filter(Boolean).join(', ')
+  : undefined;
 const rows: [string, string | undefined][] = [
   ['Автор', author],
   ['Рік', p.year],
+  ['Оригінал', originalLine],
+  ['Український переклад', translator],
   ['Жанр', p.genre],
   ['Літературний напрям', p.direction],
   ['Тема', p.theme],

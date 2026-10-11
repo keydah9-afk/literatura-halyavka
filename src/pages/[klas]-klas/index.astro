@@ -4,7 +4,9 @@ import Breadcrumbs from '../../components/Breadcrumbs.astro';
 import WorkCard from '../../components/WorkCard.astro';
 import Callout from '../../components/Callout.astro';
 import { PROGRAM } from '../../data/program';
-import { readyWorkSlugs, getEssays, plural } from '../../lib/content';
+import { zarClassByNumber } from '../../data/zarubizhna';
+import { groupByChoice } from '../../lib/catalog';
+import { readyWorkSlugs, getWorks, getEssays, essaysOfSubject, plural } from '../../lib/content';
 
 export async function getStaticPaths() {
   return PROGRAM.map((c) => ({ params: { klas: String(c.klas) }, props: { klasData: c } }));
@@ -12,7 +14,8 @@ export async function getStaticPaths() {
 
 const { klasData } = Astro.props;
 const ready = await readyWorkSlugs();
-const essays = (await getEssays()).filter((e) => e.data.classes.includes(klasData.klas));
+const essays = essaysOfSubject(await getEssays(), await getWorks(), 'ukr').filter((e) => e.data.classes.includes(klasData.klas));
+const zar = zarClassByNumber(klasData.klas);
 const total = klasData.sections.reduce((n, s) => n + s.works.length, 0);
 const done = klasData.sections.reduce((n, s) => n + s.works.filter((w) => ready.has(w.slug)).length, 0);
 
@@ -35,11 +38,35 @@ const description = `Усі твори програми ${klasData.klas} кла�
       {essays.length > 0 && <> · тем для творів: {essays.length}</>}
     </p>
 
+    {zar && (
+      <a href={`/zarubizhna/${klasData.klas}-klas/`} class="mt-4 flex items-center justify-between gap-3 rounded-xl border border-brand/30 bg-cream px-4 py-3 font-sans transition hover:border-brand dark:bg-white/5">
+        <span>
+          <span class="block text-xs font-bold uppercase tracking-wide text-brand">Другий предмет</span>
+          <span class="text-[0.98rem] font-semibold text-heading">Зарубіжна література, {klasData.klas} клас</span>
+        </span>
+        <span class="text-brand" aria-hidden="true">→</span>
+      </a>
+    )}
+
     {klasData.sections.map((section) => (
       <section class="mt-8">
-        <h2 class="mb-3 font-sans text-xl font-bold text-heading">{section.title}</h2>
-        <div class="space-y-2">
-          {section.works.map((w) => <WorkCard work={w} ready={ready.has(w.slug)} />)}
+        <h2 class="font-sans text-xl font-bold text-heading">{section.title}</h2>
+        {section.note && <p class="mt-0.5 mb-3 font-sans text-sm text-muted">{section.note}</p>}
+        <div class:list={['space-y-2', !section.note && 'mt-3']}>
+          {groupByChoice(section.works).map((group) =>
+            group.choice && group.works.length > 1 ? (
+              <div class="rounded-xl border border-brand/30 bg-brand/5 p-2.5">
+                <p class="mb-2 px-1.5 font-sans text-xs font-bold uppercase tracking-wide text-brand">
+                  {section.choices?.[group.choice] ?? 'Один твір — за вибором учителя'}
+                </p>
+                <div class="space-y-2">
+                  {group.works.map((w) => <WorkCard work={w} ready={ready.has(w.slug)} />)}
+                </div>
+              </div>
+            ) : (
+              group.works.map((w) => <WorkCard work={w} ready={ready.has(w.slug)} />)
+            ),
+          )}
         </div>
       </section>
     ))}

@@ -12,94 +12,153 @@
  * сторінка твору живе за адресою /tvory/<slug>/ і може згадуватись у кількох класах.
  */
 
-export type WorkKind = 'проза' | 'поезія' | 'драма' | 'фольклор' | 'публіцистика';
-
-export interface WorkRef {
-  /** slug сторінки твору: /tvory/<slug>/ */
-  slug: string;
-  title: string;
-  /** Автор; для фольклору не вказуємо */
-  author?: string;
-  /** slug сторінки письменника: /pysmennyky/<authorSlug>/ */
-  authorSlug?: string;
-  genre: string;
-  kind: WorkKind;
-  /** Позначка «вивчити напам'ять» — окремий розділ сайту */
-  byHeart?: boolean;
-  /** Приміткa для куратора контенту (не показується учням) */
-  note?: string;
-}
-
-export interface ProgramSection {
-  title: string;
-  works: WorkRef[];
-}
-
-export interface ProgramClass {
-  klas: number;
-  /** Підзаголовок сторінки класу */
-  tagline: string;
-  intro: string;
-  sections: ProgramSection[];
-}
+import type { ProgramClass } from './types';
+export type { WorkKind, WorkRef, ProgramSection, ProgramClass } from './types';
 
 export const PROGRAM: ProgramClass[] = [
   {
     klas: 5,
     tagline: 'Міфи, казки та перші повісті',
     intro:
-      'П’ятий клас — це вхід у літературу через міф і казку. Тексти короткі, тож переказ тут майже завжди потрібен не «замість читання», а щоб швидко пригадати сюжет перед уроком.',
+      'П’ятий клас — це вхід у літературу через міф і казку. Тексти короткі, тож переказ тут майже завжди потрібен не «замість читання», а щоб швидко пригадати сюжет перед уроком. Список складено за модельною програмою Архипової, Січкар і Шило — за нею навчається більшість п’ятикласників; там, де вчитель обирає кілька творів із переліку, ми додали всі.',
     sections: [
       {
         title: 'Міфи та легенди українців',
         works: [
           { slug: 'pro-zoryanyj-viz', title: 'Про зоряний Віз', genre: 'міф', kind: 'фольклор' },
-          { slug: 'chomu-pes-zhyve-kolo-lyudyny', title: 'Чому пес живе коло людини?', genre: 'легенда', kind: 'фольклор' },
           { slug: 'berehynya', title: 'Берегиня', genre: 'міф', kind: 'фольклор' },
-          { slug: 'dazhboh', title: 'Дажбог', genre: 'міф', kind: 'фольклор' },
+          { slug: 'chomu-pes-zhyve-kolo-lyudyny', title: 'Чому пес живе коло людини?', genre: 'легенда', kind: 'фольклор' },
           { slug: 'neopalyma-kupyna', title: 'Неопалима купина', genre: 'легенда', kind: 'фольклор' },
+          { slug: 'sila-ridnoyi-zemli', title: 'Сила рідної землі', genre: 'легенда', kind: 'фольклор' },
           { slug: 'yak-vynykly-karpaty', title: 'Як виникли Карпати', genre: 'легенда', kind: 'фольклор' },
+          { slug: 'dazhboh', title: 'Дажбог', genre: 'міф', kind: 'фольклор', note: 'немає в програмі Архипової — є в інших модельних програмах' },
         ],
       },
       {
-        title: 'Народні казки',
+        title: 'Народні перекази про запорожців',
         works: [
-          { slug: 'pro-pravdu-i-kryvdu', title: 'Про правду і кривду', genre: 'соціально-побутова казка', kind: 'фольклор' },
-          { slug: 'mudra-divchyna', title: 'Мудра дівчина', genre: 'соціально-побутова казка', kind: 'фольклор' },
-          { slug: 'yajtse-rajtse', title: 'Яйце-райце', genre: 'чарівна казка', kind: 'фольклор' },
-          { slug: 'letyuchyj-korabel', title: 'Летючий корабель', genre: 'чарівна казка', kind: 'фольклор' },
+          { slug: 'pryjom-u-zaporozhtsiv', title: 'Прийом у запорожців', genre: 'народний переказ', kind: 'фольклор' },
+          { slug: 'pro-zaporozhtsiv', title: 'Про запорожців', genre: 'народний переказ', kind: 'фольклор' },
+          { slug: 'yak-sirko-peremih-tatar', title: 'Як Сірко переміг татар', genre: 'народний переказ', kind: 'фольклор' },
+        ],
+      },
+      {
+        title: 'Загадки, прислів’я, приказки',
+        works: [
+          { slug: 'zahadky-prysliv-ya-skoromovky', title: 'Загадки, прислів’я, приказки, скоромовки', genre: 'малі жанри фольклору', kind: 'фольклор' },
+        ],
+      },
+      {
+        title: 'Народні казки про тварин',
+        choices: {
+          zviri: 'Учитель обирає 2 казки з чотирьох',
+        },
+        works: [
+          { slug: 'vovk-i-chaplya', title: 'Вовк і чапля', genre: 'казка про тварин', kind: 'фольклор', choice: 'zviri' },
+          { slug: 'lysytsya-ta-rak', title: 'Лисиця та рак', genre: 'казка про тварин', kind: 'фольклор', choice: 'zviri' },
+          { slug: 'tsar-lev', title: 'Цар лев', genre: 'казка про тварин', kind: 'фольклор', choice: 'zviri' },
+          { slug: 'yak-yizhak-i-zayets-bihaly-navvyperedky', title: 'Як їжак і заєць бігали наввипередки', genre: 'казка про тварин', kind: 'фольклор', choice: 'zviri' },
+        ],
+      },
+      {
+        title: 'Побутові та фантастичні казки',
+        choices: {
+          kazky: 'Учитель обирає 4 казки із семи',
+        },
+        works: [
+          { slug: 'mudra-divchyna', title: 'Мудра дівчина', genre: 'соціально-побутова казка', kind: 'фольклор', choice: 'kazky' },
+          { slug: 'pro-pravdu-i-kryvdu', title: 'Про правду і кривду', genre: 'соціально-побутова казка', kind: 'фольклор', choice: 'kazky' },
+          { slug: 'linyva-divchyna', title: 'Лінива дівчина', genre: 'соціально-побутова казка', kind: 'фольклор', choice: 'kazky' },
+          { slug: 'pro-horu-shcho-verhom-syahala-neba', title: 'Про гору, що верхом сягала неба', genre: 'чарівна казка', kind: 'фольклор', choice: 'kazky' },
+          { slug: 'oh', title: 'Ох', genre: 'чарівна казка', kind: 'фольклор', choice: 'kazky' },
+          { slug: 'letyuchyj-korabel', title: 'Летючий корабель', genre: 'чарівна казка', kind: 'фольклор', choice: 'kazky' },
+          { slug: 'yajtse-rajtse', title: 'Яйце-райце', genre: 'чарівна казка', kind: 'фольклор', choice: 'kazky' },
         ],
       },
       {
         title: 'Літературні казки',
         works: [
           { slug: 'farbovanyj-lys', title: 'Фарбований Лис', author: 'Іван Франко', authorSlug: 'ivan-franko', genre: 'казка-байка', kind: 'проза' },
-          { slug: 'huha-mohovynka', title: 'Хуха-Моховинка', author: 'Василь Королів-Старий', authorSlug: 'vasyl-koroliv-staryj', genre: 'літературна казка', kind: 'проза' },
           { slug: 'mavka-verbynka', title: 'Мавка-Вербинка', author: 'Василь Королів-Старий', authorSlug: 'vasyl-koroliv-staryj', genre: 'літературна казка', kind: 'проза' },
-          { slug: 'nezvychajni-pryhody-ali', title: 'Незвичайні пригоди Алі в країні Недоладії', author: 'Галина Малик', authorSlug: 'halyna-malyk', genre: 'повість-казка', kind: 'проза' },
+          { slug: 'huha-mohovynka', title: 'Хуха-Моховинка', author: 'Василь Королів-Старий', authorSlug: 'vasyl-koroliv-staryj', genre: 'літературна казка', kind: 'проза', note: 'у програмі Архипової — варіативний' },
           { slug: 'tsar-plaksij-ta-loskoton', title: 'Цар Плаксій та Лоскотон', author: 'Василь Симоненко', authorSlug: 'vasyl-symonenko', genre: 'віршована казка', kind: 'поезія' },
+          { slug: 'mykyta-kozhumyaka', title: 'Микита Кожум’яка', author: 'Олександр Олесь', authorSlug: 'oleksandr-oles', genre: 'казка-п’єса', kind: 'драма' },
         ],
       },
       {
-        title: 'Повісті, оповідання, літописні оповіді',
+        title: 'Поезія: картини рідної природи',
+        choices: {
+          shev: 'Тарас Шевченко: учитель обирає 2 вірші з трьох',
+          tych: 'Павло Тичина: 2 вірші з трьох',
+          huts: 'Євген Гуцало: 2 вірші з трьох',
+          ryls: 'Максим Рильський: 2 вірші з чотирьох',
+          vinh: 'Микола Вінграновський: 2 вірші з п’яти',
+        },
         works: [
-          { slug: 'tayemnytsya-kozatskoyi-shabli', title: 'Таємниця козацької шаблі', author: 'Зірка Мензатюк', authorSlug: 'zirka-menzatyuk', genre: 'пригодницька повість', kind: 'проза' },
-          { slug: 'siromanets', title: 'Сіроманець', author: 'Микола Вінграновський', authorSlug: 'mykola-vinhranovskyj', genre: 'повість', kind: 'проза' },
-          { slug: 'zasnuvannya-kyyeva', title: 'Про заснування Києва (Кий, Щек, Хорив і сестра Либідь)', genre: 'літописна оповідь', kind: 'фольклор', note: 'з «Повісті минулих літ»' },
-          { slug: 'pro-knyazya-oleha', title: 'Про князя Олега', genre: 'літописна оповідь', kind: 'фольклор', note: 'з «Повісті минулих літ»' },
-          { slug: 'pro-kyryla-kozhumyaku', title: 'Про Кирила Кожум’яку', genre: 'літописна оповідь', kind: 'фольклор' },
+          { slug: 'za-sontsem-hmaronka-plyve', title: 'За сонцем хмаронька пливе', author: 'Тарас Шевченко', authorSlug: 'taras-shevchenko', genre: 'пейзажна лірика', kind: 'поезія', choice: 'shev' },
+          { slug: 'sadok-vyshnevyj-kolo-haty', title: 'Садок вишневий коло хати', author: 'Тарас Шевченко', authorSlug: 'taras-shevchenko', genre: 'пейзажна лірика', kind: 'поезія', byHeart: true, choice: 'shev' },
+          { slug: 'nad-dniprovoyu-sahoyu', title: 'Над Дніпровою сагою', author: 'Тарас Шевченко', authorSlug: 'taras-shevchenko', genre: 'пейзажна лірика', kind: 'поезія', choice: 'shev' },
+          { slug: 'tychyna-ne-buvav-ty-u-nashyh-krayah', title: 'Не бував ти у наших краях!', author: 'Павло Тичина', authorSlug: 'pavlo-tychyna', genre: 'пейзажна лірика', kind: 'поезія', choice: 'tych' },
+          { slug: 'tychyna-hayi-shumlyat', title: 'Гаї шумлять', author: 'Павло Тичина', authorSlug: 'pavlo-tychyna', genre: 'пейзажна лірика', kind: 'поезія', byHeart: true, choice: 'tych' },
+          { slug: 'tychyna-blakyt-moyu-dushu-obviyala', title: 'Блакить мою душу обвіяла…', author: 'Павло Тичина', authorSlug: 'pavlo-tychyna', genre: 'пейзажна лірика', kind: 'поезія', choice: 'tych' },
+          { slug: 'hutsalo-zirka', title: 'Зірка', author: 'Євген Гуцало', authorSlug: 'yevhen-hutsalo', genre: 'лірика', kind: 'поезія', choice: 'huts' },
+          { slug: 'hutsalo-charivnyky', title: 'Чарівники', author: 'Євген Гуцало', authorSlug: 'yevhen-hutsalo', genre: 'лірика', kind: 'поезія', choice: 'huts' },
+          { slug: 'hutsalo-zhuravli-vysoki-prolitayut', title: 'Журавлі високі пролітають…', author: 'Євген Гуцало', authorSlug: 'yevhen-hutsalo', genre: 'пейзажна лірика', kind: 'поезія', choice: 'huts' },
+          { slug: 'rylskyj-doshch', title: 'Дощ («Благодатний, довгожданий…»)', author: 'Максим Рильський', authorSlug: 'maksym-rylskyj', genre: 'пейзажна лірика', kind: 'поезія', choice: 'ryls' },
+          { slug: 'rylskyj-pered-hrozoyu', title: 'Перед грозою', author: 'Максим Рильський', authorSlug: 'maksym-rylskyj', genre: 'пейзажна лірика', kind: 'поезія', choice: 'ryls' },
+          { slug: 'rylskyj-osin-malyar', title: 'Осінь-маляр із палітрою пишною…', author: 'Максим Рильський', authorSlug: 'maksym-rylskyj', genre: 'пейзажна лірика', kind: 'поезія', choice: 'ryls' },
+          { slug: 'rylskyj-lyuby-pryrodu', title: 'Люби природу не як символ…', author: 'Максим Рильський', authorSlug: 'maksym-rylskyj', genre: 'пейзажна лірика', kind: 'поезія', choice: 'ryls' },
+          { slug: 'vinhranovskyj-babunyn-doshch', title: 'Бабунин дощ', author: 'Микола Вінграновський', authorSlug: 'mykola-vinhranovskyj', genre: 'лірика', kind: 'поезія', choice: 'vinh' },
+          { slug: 'vinhranovskyj-sama-soboyu-richka-tsya-teche', title: 'Сама собою річка ця тече', author: 'Микола Вінграновський', authorSlug: 'mykola-vinhranovskyj', genre: 'пейзажна лірика', kind: 'поезія', choice: 'vinh' },
+          { slug: 'vinhranovskyj-persha-kolyskova', title: 'Перша колискова', author: 'Микола Вінграновський', authorSlug: 'mykola-vinhranovskyj', genre: 'лірика', kind: 'поезія', choice: 'vinh' },
+          { slug: 'vinhranovskyj-daleniye-vechir', title: 'Даленіє вечір в бабиному літі…', author: 'Микола Вінграновський', authorSlug: 'mykola-vinhranovskyj', genre: 'пейзажна лірика', kind: 'поезія', choice: 'vinh' },
+          { slug: 'vinhranovskyj-dalekymy-svitamy', title: 'Далекими світами…', author: 'Микола Вінграновський', authorSlug: 'mykola-vinhranovskyj', genre: 'лірика', kind: 'поезія', choice: 'vinh' },
+          { slug: 'kostenko-buvaye-chasom-slipnu-vid-krasy', title: 'Буває, часом сліпну від краси', author: 'Ліна Костенко', authorSlug: 'lina-kostenko', genre: 'філософська лірика', kind: 'поезія', note: 'немає в програмі Архипової — є в інших модельних програмах' },
+          { slug: 'zhylenko-zhar-ptytsya', title: 'Жар-Птиця', author: 'Ірина Жиленко', authorSlug: 'iryna-zhylenko', genre: 'лірика', kind: 'поезія', note: 'немає в програмі Архипової — є в інших модельних програмах' },
         ],
       },
       {
-        title: 'Поезія',
+        title: 'Літописні оповіді',
+        choices: {
+          lit: 'Учитель обирає 4 оповіді із семи',
+        },
         works: [
-          { slug: 'sadok-vyshnevyj-kolo-haty', title: 'Садок вишневий коло хати', author: 'Тарас Шевченко', authorSlug: 'taras-shevchenko', genre: 'пейзажна лірика', kind: 'поезія', byHeart: true },
-          { slug: 'za-sontsem-hmaronka-plyve', title: 'За сонцем хмаронька пливе', author: 'Тарас Шевченко', authorSlug: 'taras-shevchenko', genre: 'пейзажна лірика', kind: 'поезія' },
-          { slug: 'tychyna-hayi-shumlyat', title: 'Гаї шумлять', author: 'Павло Тичина', authorSlug: 'pavlo-tychyna', genre: 'пейзажна лірика', kind: 'поезія', byHeart: true },
-          { slug: 'rylskyj-doshch', title: 'Дощ («Благодатний, довгожданий…»)', author: 'Максим Рильський', authorSlug: 'maksym-rylskyj', genre: 'пейзажна лірика', kind: 'поезія' },
-          { slug: 'kostenko-buvaye-chasom-slipnu-vid-krasy', title: 'Буває, часом сліпну від краси', author: 'Ліна Костенко', authorSlug: 'lina-kostenko', genre: 'філософська лірика', kind: 'поезія' },
-          { slug: 'zhylenko-zhar-ptytsya', title: 'Жар-Птиця', author: 'Ірина Жиленко', authorSlug: 'iryna-zhylenko', genre: 'лірика', kind: 'поезія' },
-          { slug: 'zahadky-prysliv-ya-skoromovky', title: 'Загадки, прислів’я, приказки, скоромовки', genre: 'малі жанри фольклору', kind: 'фольклор' },
+          { slug: 'povist-mynulyh-lit', title: 'Повість минулих літ', genre: 'літопис', kind: 'проза', scope: 'загальне ознайомлення' },
+          { slug: 'zasnuvannya-kyyeva', title: 'Про заснування Києва (Кий, Щек, Хорив і сестра Либідь)', genre: 'літописна оповідь', kind: 'фольклор', note: 'з «Повісті минулих літ»', choice: 'lit' },
+          { slug: 'pro-knyazya-oleha', title: 'Про князя Олега', genre: 'літописна оповідь', kind: 'фольклор', note: 'з «Повісті минулих літ»', choice: 'lit' },
+          { slug: 'pro-knyahynyu-olhu', title: 'Про княгиню Ольгу', genre: 'літописна оповідь', kind: 'фольклор', note: 'з «Повісті минулих літ»', choice: 'lit' },
+          { slug: 'svyatoslav-ukladaye-myr-z-hrekamy', title: 'Святослав укладає мир з греками', genre: 'літописна оповідь', kind: 'фольклор', note: 'з «Повісті минулих літ»', choice: 'lit' },
+          { slug: 'volodymyr-vybyraye-viru', title: 'Володимир вибирає віру', genre: 'літописна оповідь', kind: 'фольклор', note: 'з «Повісті минулих літ»', choice: 'lit' },
+          { slug: 'pro-hreshchennya-rusi', title: 'Про хрещення Русі князем Володимиром', genre: 'літописна оповідь', kind: 'фольклор', note: 'з «Повісті минулих літ»', choice: 'lit' },
+          { slug: 'yaroslav-pohvala-knyham', title: 'Розгром Ярославом печенігів. Похвала книгам', genre: 'літописна оповідь', kind: 'фольклор', note: 'з «Повісті минулих літ»', choice: 'lit' },
+          { slug: 'pro-kyryla-kozhumyaku', title: 'Про Кирила Кожум’яку', genre: 'літописна оповідь', kind: 'фольклор', note: 'немає в програмі Архипової — є в інших модельних програмах' },
+        ],
+      },
+      {
+        title: 'Історичне минуле в художніх творах',
+        works: [
+          { slug: 'oles-zaspiv', title: 'Заспів', author: 'Олександр Олесь', authorSlug: 'oleksandr-oles', genre: 'вірш', kind: 'поезія', note: 'із книжки «Княжа Україна»' },
+          { slug: 'oles-ukrayina-v-starovynu', title: 'Україна в старовину', author: 'Олександр Олесь', authorSlug: 'oleksandr-oles', genre: 'вірш', kind: 'поезія', note: 'із книжки «Княжа Україна»' },
+          { slug: 'oles-pohid-na-tsarhorod', title: 'Похід на Царгород', author: 'Олександр Олесь', authorSlug: 'oleksandr-oles', genre: 'вірш', kind: 'поезія', note: 'із книжки «Княжа Україна»' },
+          { slug: 'oles-yaroslav-mudryj', title: 'Ярослав Мудрий', author: 'Олександр Олесь', authorSlug: 'oleksandr-oles', genre: 'вірш', kind: 'поезія', note: 'із книжки «Княжа Україна»' },
+          { slug: 'nechuj-zaporozhtsi', title: 'Запорожці', author: 'Іван Нечуй-Левицький', authorSlug: 'ivan-nechuj-levytskyj', genre: 'оповідання', kind: 'проза' },
+          { slug: 'tayemnytsya-kozatskoyi-shabli', title: 'Таємниця козацької шаблі', author: 'Зірка Мензатюк', authorSlug: 'zirka-menzatyuk', genre: 'пригодницька повість', kind: 'проза', note: 'у програмі Архипової — варіативний' },
+        ],
+      },
+      {
+        title: 'Світ природи і людини в прозі',
+        works: [
+          { slug: 'hutsalo-los', title: 'Лось', author: 'Євген Гуцало', authorSlug: 'yevhen-hutsalo', genre: 'оповідання', kind: 'проза' },
+          { slug: 'fedko-halamydnyk', title: 'Федько-халамидник', author: 'Володимир Винниченко', authorSlug: 'volodymyr-vynnychenko', genre: 'оповідання', kind: 'проза' },
+          { slug: 'tyutyunnyk-dyvak', title: 'Дивак', author: 'Григір Тютюнник', authorSlug: 'hryhir-tyutyunnyk', genre: 'оповідання', kind: 'проза' },
+          { slug: 'siromanets', title: 'Сіроманець', author: 'Микола Вінграновський', authorSlug: 'mykola-vinhranovskyj', genre: 'повість', kind: 'проза', note: 'у програмі Архипової — варіативний' },
+        ],
+      },
+      {
+        title: 'Пригоди і фантастика',
+        works: [
+          { slug: 'nezvychajni-pryhody-ali', title: 'Незвичайні пригоди Алі в країні Недоладії', author: 'Галина Малик', authorSlug: 'halyna-malyk', genre: 'повість-казка', kind: 'проза', scope: 'читають скорочено' },
+          { slug: 'charivnyj-talisman', title: 'Чарівний талісман', author: 'Всеволод Нестайко', authorSlug: 'vsevolod-nestajko', genre: 'повість-казка', kind: 'проза', scope: 'читають скорочено' },
         ],
       },
     ],

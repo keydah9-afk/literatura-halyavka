@@ -6,6 +6,7 @@ import Callout from '../../components/Callout.astro';
 import QuoteList from '../../components/QuoteList.astro';
 import Tag from '../../components/Tag.astro';
 import { getAuthors, getWorks } from '../../lib/content';
+import { authorSubject, klasHref } from '../../lib/catalog';
 
 export async function getStaticPaths() {
   const authors = await getAuthors();
@@ -16,6 +17,7 @@ const { author } = Astro.props;
 const d = author.data;
 const { Content } = await render(author);
 const works = (await getWorks()).filter((w) => w.data.authorSlug === author.id);
+const subject = authorSubject(author.id);
 
 const title = `${d.title} (${d.years}) — біографія коротко`;
 const description = d.description ?? `${d.title} — ${d.role}. Коротка біографія, хронологія життя, цікаві факти та список творів шкільної програми.`;
@@ -36,7 +38,7 @@ const jsonLd = {
     <p class="mt-1.5 font-sans text-base text-muted">{d.years} · {d.role}</p>
     {d.classes.length > 0 && (
       <div class="mt-3 flex flex-wrap gap-1.5">
-        {d.classes.map((k) => <Tag tone="ink" href={`/${k}-klas/`}>{k} клас</Tag>)}
+        {d.classes.map((k) => <Tag tone="ink" href={klasHref(subject, k)}>{k} клас</Tag>)}
       </div>
     )}
 

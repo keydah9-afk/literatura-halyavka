@@ -16,6 +16,15 @@ import fs from 'node:fs';
 import path from 'node:path';
 import yaml from 'js-yaml';
 
+/** Скільки коротких цитат із перекладу дозволено на розбір (рішення власника, 5.10.2026) */
+const MAX_TRANSLATION_QUOTES = 8;
+
+/**
+ * Автори, чиї оригінали ще під правом (на 2026 рік): розбір без цитування, з маркером
+ * «**Про цей розбір.**», як у tyhrolovy.md. Дал, Ліндґрен, Янсон, Маар.
+ */
+const COPYRIGHT_AUTHORS = new Set(['roald-dal', 'astrid-lindhren', 'tuve-yanson', 'paul-maar']);
+
 const WORKS = 'src/content/works';
 const ESSAYS = 'src/content/essays';
 const HEROES = 'src/content/heroes';
@@ -79,6 +88,11 @@ const read = (dir, file) => {
   return { data, body: raw.slice(end + 4), raw };
 };
 
+const catalogSlugs = (file) =>
+  new Set([...fs.readFileSync(file, 'utf8').matchAll(/slug: '([^']+)', title: '/g)].map((m) => m[1]));
+const programSlugs = catalogSlugs('src/data/program.ts');
+const zarSlugs = catalogSlugs('src/data/zarubizhna.ts');
+
 const words = (s) => s.trim().split(/\s+/).length;
 const list = (dir) => fs.readdirSync(dir).filter((f) => f.endsWith('.md') && !f.startsWith('_'));
 
@@ -91,6 +105,47 @@ for (const file of list(WORKS)) {
   const { data, raw, body } = read(WORKS, file);
   // Режим «без цитування» (автори з чинними правами) — його мусять успадкувати й характеристики
   workData.set(slug, { data, noQuotes: body.includes('**Про цей розбір.**') });
+
+  // Предмет файлу має збігатися з каталогом, у якому стоїть slug: інакше сторінка
+  // стоїть у списку одного предмета, а хлібні крихти й теги ведуть в інший.
+  const subject = data.subject ?? 'ukr';
+  if (subject === 'zar' && !zarSlugs.has(slug)) {
+    errors.push(`${slug}: subject «zar», але slug немає в src/data/zarubizhna.ts`);
+  }
+  if (subject === 'ukr' && zarSlugs.has(slug)) {
+    errors.push(`${slug}: slug є в zarubizhna.ts, а subject — «ukr»; додай «subject: zar»`);
+  }
+  if (subject === 'ukr' && !programSlugs.has(slug)) {
+    warnings.push(`${slug}: українського розбору немає в src/data/program.ts (НМТ-виняток?)`);
+  }
+
+  if (subject === 'zar') {
+    const quotesCount = (data.quotes ?? []).length;
+    if (!data.original) warnings.push(`${slug}: зарубіжний твір без блоку original (назва мовою оригіналу, мова)`);
+    // У режимі без цитування (маркер «Про цей розбір.») ім’я перекладача може бути невідомим — тоді цитат нема
+    if (!data.translator && !body.includes('**Про цей розбір.**')) warnings.push(`${slug}: зарубіжний твір без translator — невідомо, за яким перекладом написано розбір`);
+    // Українські переклади охороняються правом перекладача: цитувати можна лише з названого
+    if ((quotesCount || (data.characters ?? []).some((c) => (c.quotes ?? []).length)) && !data.translator) {
+      errors.push(`${slug}: є цитати з перекладу, але не вказано translator`);
+    }
+    if (quotesCount > MAX_TRANSLATION_QUOTES) {
+      warnings.push(`${slug}: ${quotesCount} цитат у quotes — домовлялися про ~${MAX_TRANSLATION_QUOTES} із перекладу`);
+    }
+    if (data.poemText && !data.translator) {
+      errors.push(`${slug}: poemText без translator — невідомо, чи переклад є суспільним надбанням`);
+    }
+  }
+
+  // Автори з чинними правами: без цитат і з маркером режиму. Інакше режим не відрізнити від звичайного.
+  if (COPYRIGHT_AUTHORS.has(data.authorSlug)) {
+    const marked = body.includes('**Про цей розбір.**');
+    const charQuotes = (data.characters ?? []).reduce((n, c) => n + (c.quotes ?? []).length, 0);
+    if (!marked) errors.push(`${slug}: автор під правом (${data.authorSlug}), але в тілі немає маркера «**Про цей розбір.**»`);
+    if ((data.quotes ?? []).length || charQuotes) {
+      errors.push(`${slug}: автор під правом (${data.authorSlug}) — quotes і characters[].quotes мають бути порожні`);
+    }
+    if (data.poemText) errors.push(`${slug}: автор під правом (${data.authorSlug}) — poemText заборонений`);
+  }
 
   // Поезія без віршознавчого паспорта — половина сторінки просто порожня.
   if (data.kind === 'поезія' && !data.poem) {
@@ -131,6 +186,10 @@ for (const file of list(ESSAYS)) {
 
   if (!workSlugs.has(data.workSlug)) {
     errors.push(`${slug}: workSlug «${data.workSlug}» — такого розбору немає в ${WORKS}/`);
+  }
+  // Есе за твором у режимі «без цитування» теж без цитат
+  if (workData.get(data.workSlug)?.noQuotes && (data.quotes ?? []).length) {
+    errors.push(`${slug}: розбір «${data.workSlug}» у режимі без цитування, а есе має ${data.quotes.length} цитат`);
   }
 
   // 7 клас рахуємо старшим: там уже «Захар Беркут», який є і в програмі НМТ.
@@ -197,7 +256,8 @@ if (fs.existsSync(HEROES)) {
 }
 
 // ── Звіт ─────────────────────────────────────────────────────────────────
-console.log(`Розборів: ${workSlugs.size} · есе: ${list(ESSAYS).length} · характеристик: ${heroCount}`);
+const zarCount = [...workData.values()].filter((w) => w.data.subject === 'zar').length;
+console.log(`Розборів: ${workSlugs.size} (зарубіжних: ${zarCount}) · есе: ${list(ESSAYS).length} · характеристик: ${heroCount}`);
 for (const w of warnings) console.log(`  ⚠ ${w}`);
 for (const e of errors) console.log(`  ✗ ${e}`);
 

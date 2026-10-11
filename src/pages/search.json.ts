@@ -1,6 +1,7 @@
 import type { APIRoute } from 'astro';
 import { getWorks, getEssays, getAuthors, getHeroes, heroWork, heroUrl } from '../lib/content';
 import { ALL_WORKS } from '../data/program';
+import { ALL_ZAR_WORKS } from '../data/zarubizhna';
 import { NMT_HEROES } from '../data/nmt';
 
 /** Індекс для миттєвого пошуку на клієнті — без зовнішніх бібліотек. */
@@ -15,7 +16,7 @@ export const GET: APIRoute = async () => {
   const items = [
     ...works.map((w) => ({
       t: w.data.title,
-      s: w.data.author ?? '',
+      s: [w.data.author, w.data.subject === 'zar' ? 'зарубіжна література' : ''].filter(Boolean).join(' · '),
       u: `/tvory/${w.id}/`,
       k: 'Твір',
       c: w.data.classes,
@@ -48,10 +49,18 @@ export const GET: APIRoute = async () => {
     })),
     // Твори з каталогу програми, до яких сторінки ще нема — щоб пошук показував,
     // що твір у програмі є, і вів на сторінку класу
-    ...ALL_WORKS.filter((w) => !ready.has(w.slug)).map((w) => ({
+    ...ALL_WORKS.filter((w, i, all) => !ready.has(w.slug) && all.findIndex((x) => x.slug === w.slug) === i).map((w) => ({
       t: w.title,
       s: w.author ?? w.genre,
       u: `/${w.klas}-klas/`,
+      k: 'У програмі',
+      c: [w.klas],
+    })),
+    // Те саме для зарубіжки: сторінки ще нема — ведемо на каталог класу
+    ...ALL_ZAR_WORKS.filter((w) => !ready.has(w.slug)).map((w) => ({
+      t: w.title,
+      s: [w.author ?? w.genre, 'зарубіжна література'].join(' · '),
+      u: `/zarubizhna/${w.klas}-klas/`,
       k: 'У програмі',
       c: [w.klas],
     })),

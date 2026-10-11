@@ -3,16 +3,18 @@ import Base from '../../layouts/Base.astro';
 import Breadcrumbs from '../../components/Breadcrumbs.astro';
 import Callout from '../../components/Callout.astro';
 import { BY_HEART } from '../../data/program';
+import { BY_HEART_ZAR } from '../../data/zarubizhna';
 import { readyWorkSlugs } from '../../lib/content';
 import { CLASSES } from '../../data/site';
 
 const ready = await readyWorkSlugs();
 const byClass = CLASSES.map((k) => ({ klas: k, items: BY_HEART.filter((w) => w.klas === k) })).filter((g) => g.items.length);
+const byClassZar = CLASSES.map((k) => ({ klas: k, items: BY_HEART_ZAR.filter((w) => w.klas === k) })).filter((g) => g.items.length);
 ---
 
 <Base
-  title="Вірші напам’ять з української літератури 5–11 клас — повний список"
-  description="Що треба вивчити напам’ять з української літератури в кожному класі: повний список творів за програмою з посиланнями на тексти."
+  title="Вірші напам’ять з літератури 5–11 клас — повний список"
+  description="Що треба вивчити напам’ять з української та зарубіжної літератури в кожному класі: повний список творів за програмою з посиланнями на тексти."
 >
   <div class="mx-auto max-w-4xl px-4 py-8">
     <Breadcrumbs items={[{ label: 'Напам’ять' }]} />
@@ -35,6 +37,25 @@ const byClass = CLASSES.map((k) => ({ klas: k, items: BY_HEART.filter((w) => w.k
               )}
               {w.author && <span class="ml-2 font-sans text-sm text-muted">{w.author}</span>}
               {w.note && <span class="mt-0.5 block font-sans text-xs text-muted">{w.note}</span>}
+            </li>
+          ))}
+        </ul>
+      </section>
+    ))}
+
+    {byClassZar.map((g) => (
+      <section class="mt-8">
+        <h2 class="mb-3 font-sans text-xl font-bold text-heading">Зарубіжна література, {g.klas} клас</h2>
+        <ul class="space-y-2">
+          {g.items.map((w) => (
+            <li class="rounded-lg border border-line bg-surface px-4 py-3">
+              {ready.has(w.slug) ? (
+                <a href={`/tvory/${w.slug}/`} class="font-sans text-[0.98rem] font-semibold text-heading hover:text-brand">{w.title}</a>
+              ) : (
+                <span class="font-sans text-[0.98rem] font-semibold text-muted">{w.title}</span>
+              )}
+              {w.author && <span class="ml-2 font-sans text-sm text-muted">{w.author}</span>}
+              {w.choice && <span class="mt-0.5 block font-sans text-xs text-muted">Один із трьох віршів — за вибором учителя: уточни, чи обрали саме цей</span>}
             </li>
           ))}
         </ul>

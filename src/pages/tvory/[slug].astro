@@ -10,9 +10,11 @@ import Poem from '../../components/Poem.astro';
 import Characters from '../../components/Characters.astro';
 import QuoteList from '../../components/QuoteList.astro';
 import Quiz from '../../components/Quiz.astro';
+import ReaderDiary from '../../components/ReaderDiary.astro';
 import Tag from '../../components/Tag.astro';
 import { getWorks, getEssays, getHeroes, essaysForWork, heroesForWork, heroUrl, readyAuthorSlugs } from '../../lib/content';
 import { SITE } from '../../data/site';
+import { klasHref, subjectCrumbs } from '../../lib/catalog';
 
 export async function getStaticPaths() {
   const works = await getWorks();
@@ -25,6 +27,13 @@ const { Content, headings } = await render(work);
 const essays = essaysForWork(await getEssays(), work.id);
 const heroLinks = Object.fromEntries(heroesForWork(await getHeroes(), work.id).map((h) => [h.data.name, heroUrl(h)]));
 const authorPageExists = !!d.authorSlug && (await readyAuthorSlugs()).has(d.authorSlug);
+
+// Предмет — тег: адреса твору спільна, а крихти й теги класів ведуть у каталог свого предмета
+const isZar = d.subject === 'zar';
+const crumbs = [...subjectCrumbs(d.subject, d.classes[0]), { label: d.title }];
+
+// Читацький щоденник ведуть у 5–7 класах; для старших він був би зайвим
+const showDiary = Math.min(...d.classes) <= 7;
 
 const mdHeadings = headings.filter((h) => h.depth === 2).map((h) => ({ id: h.slug, text: h.text }));
 const toc = [
@@ -39,11 +48,13 @@ const toc = [
   ...(d.plan.length ? [{ id: 'plan', text: 'План твору' }] : []),
   ...(essays.length ? [{ id: 'tvory-temy', text: 'Теми творів' }] : []),
   ...(d.quiz.length ? [{ id: 'test', text: 'Перевір себе' }] : []),
+  ...(showDiary ? [{ id: 'shchodennyk', text: 'Читацький щоденник' }] : []),
 ];
 
 // У лірики немає «короткого змісту» — обіцяти його в title означало б
 // приводити з пошуку людей, які шукають переказ, і показувати їм не те.
-const titleTail = d.kind === 'поезія' ? 'аналіз вірша й текст' : 'короткий зміст і аналіз';
+// «й текст» — лише якщо повний текст справді є на сторінці: для віршів під правом його нема
+const titleTail = d.kind === 'поезія' ? (d.poemText ? 'аналіз вірша й текст' : 'аналіз вірша') : 'короткий зміст і аналіз';
 const title = `${d.title}${d.author ? ` — ${d.author}` : ''}: ${titleTail}`;
 const description = d.description ?? `${d.veryShort.slice(0, 150)}…`;
 const jsonLd = {
@@ -62,7 +73,7 @@ const jsonLd = {
 <Base {title} {description} type="article" {jsonLd}>
   <div class="mx-auto grid max-w-6xl gap-10 px-4 py-8 lg:grid-cols-[1fr_15rem]">
     <article class="min-w-0 max-w-reading">
-      <Breadcrumbs items={[{ label: `${d.classes[0]} клас`, href: `/${d.classes[0]}-klas/` }, { label: d.title }]} />
+      <Breadcrumbs items={crumbs} />
 
       <h1 class="font-sans text-3xl font-extrabold leading-tight tracking-tight text-heading sm:text-4xl">{d.title}</h1>
       {d.author && (
@@ -72,7 +83,8 @@ const jsonLd = {
       )}
       <div class="mt-3 flex flex-wrap gap-1.5">
         <Tag tone="brand">{d.passport.genre}</Tag>
-        {d.classes.map((k) => <Tag tone="ink" href={`/${k}-klas/`}>{k} клас</Tag>)}
+        {isZar && <Tag tone="ink" href="/zarubizhna/">зарубіжна</Tag>}
+        {d.classes.map((k) => <Tag tone="ink" href={klasHref(d.subject, k)}>{k} клас</Tag>)}
         {d.byHeart && <Tag>напам’ять</Tag>}
       </div>
 
@@ -80,7 +92,7 @@ const jsonLd = {
         <p id="korotko" class="scroll-mt-20">{d.veryShort}</p>
       </Callout>
 
-      <Passport passport={d.passport} author={d.author} />
+      <Passport passport={d.passport} author={d.author} original={d.original} translator={d.translator} />
       {d.poem && <PoemForm poem={d.poem} />}
       {d.poemText && <Poem text={d.poemText} note={d.poemTextNote} />}
 
@@ -131,6 +143,18 @@ const jsonLd = {
         )}
 
         {d.quiz.length > 0 && <Quiz quiz={d.quiz} />}
+
+        {showDiary && (
+          <ReaderDiary
+            title={d.title}
+            author={d.author}
+            genre={d.passport.genre}
+            heroes={d.characters.map((c) => c.name)}
+            summary={d.veryShort}
+            isPoem={d.kind === 'поезія'}
+            mood={d.poem?.mood}
+          />
+        )}
       </div>
 
       <Callout tone="info" title="Чесно кажучи">
@@ -138,6 +162,9 @@ const jsonLd = {
           <>Готовий аналіз — це чужа думка про вірш, і вчитель це чує. Перечитай текст уголос сам: у ліриці половина змісту в тому, де ти зупинишся й що виділиш голосом. Ця сторінка потрібна, щоб не проґавити термін чи образ, а не щоб замінити власне читання.</>
         ) : (
           <>Переказ — це підказка, а не заміна книжці. На уроці одразу видно того, хто читав: у нього є свої улюблені сцени й запитання до автора. Використай цю сторінку, щоб швидко пригадати сюжет — а сам твір усе-таки відкрий.</>
+        )}
+        {isZar && (
+          <> Переклад у вашому підручнику може відрізнятися від того, за яким написано цю сторінку: імена героїв і окремі формулювання не завжди збігаються.</>
         )}
       </Callout>
     </article>
