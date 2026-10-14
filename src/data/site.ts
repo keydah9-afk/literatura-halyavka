@@ -8,6 +8,8 @@ export const SITE = {
   lang: 'uk',
   locale: 'uk_UA',
   contactEmail: 'keydah9@gmail.com',
+  /** Google Analytics 4; підключається лише в продакшн-збірці (див. BaseHead.astro) */
+  gaId: 'G-5BNS9KGNRG',
   mainSite: { name: 'Халявка — ГДЗ 1–11 клас', url: 'https://halyavka.net' },
   /** Скільки варіантів твору пишемо на одну тему (див. CLAUDE.md) */
   essayVariants: 3,

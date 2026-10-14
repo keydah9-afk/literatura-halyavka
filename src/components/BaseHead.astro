@@ -36,6 +36,19 @@ const jsonLdList = jsonLd ? (Array.isArray(jsonLd) ? jsonLd : [jsonLd]) : [];
 
 {jsonLdList.map((item) => <script type="application/ld+json" set:html={JSON.stringify(item)} />)}
 
+<!-- Google Analytics 4: лише в продакшні, щоб `npm run dev` не рахувався відвідуваннями -->
+{import.meta.env.PROD && SITE.gaId && (
+  <>
+    <script is:inline async src={`https://www.googletagmanager.com/gtag/js?id=${SITE.gaId}`}></script>
+    <script is:inline define:vars={{ gaId: SITE.gaId }}>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+      gtag('config', gaId);
+    </script>
+  </>
+)}
+
 <!-- Тема застосовується до першого малювання, щоб не було спалаху білого -->
 <script is:inline>
   (() => {
