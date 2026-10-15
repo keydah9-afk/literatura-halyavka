@@ -268,7 +268,7 @@ Frontmatter дає структуровані блоки (паспорт, гер
   `zahar-berkut`, `lisova-pisnya`, `martyn-borulya` і `myna-mazajlo` (12 жовтня), а також `natalka-poltavka`,
   `mykyta-kozhumyaka`, `kaminnyj-hrest`, `perehresni-stezhky`, `tini-zabutyh-predkiv`, `instytutka`,
   `fedko-halamydnyk`, `za-sestroyu`, `skarb`, `tsar-plaksij-ta-loskoton`, `lepkyj-myshka`,
-  `dorohoyu-tsinoyu` і `taras-bulba` (13 жовтня), а також `marusya` і `farbovanyj-lys` (14 жовтня) звірені з повним текстом **читанням** і виправлені там, де
+  `dorohoyu-tsinoyu` і `taras-bulba` (13 жовтня), а також `marusya` і `farbovanyj-lys` (14 жовтня), а також `nechuj-zaporozhtsi`, `hlopchyk-zirka`, `snihova-koroleva`, `luskunchyk-i-myshachyj-korol` і `alisa-v-krayini-div` (14 жовтня, друга сесія) звірені з повним текстом **читанням** і виправлені там, де
   розходились (див. журнали в `STATUS.md`): скрипт ловить лише перекручені цитати, а сюжетні помилки
   (порядок подій, хто що сказав, кількості, «домислені» деталі) знаходить тільки читання. **Інші розбори
   5–11 класів без повного тексту не писалися, але вибіркової звірки читанням вони ще не проходили** —
