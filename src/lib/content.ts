@@ -3,14 +3,18 @@ import { getCollection, type CollectionEntry } from 'astro:content';
 const isPublished = <T extends { data: { draft: boolean } }>(e: T) =>
   import.meta.env.DEV || !e.data.draft;
 
+/** getCollection не гарантує порядку: без сортування списки на сторінках міняються від збірки до збірки. */
+const byTitle = <T extends { id: string; data: { title: string } }>(a: T, b: T) =>
+  a.data.title.localeCompare(b.data.title, 'uk') || a.id.localeCompare(b.id);
+
 export async function getWorks() {
-  return (await getCollection('works')).filter(isPublished);
+  return (await getCollection('works')).filter(isPublished).sort(byTitle);
 }
 export async function getEssays() {
-  return (await getCollection('essays')).filter(isPublished);
+  return (await getCollection('essays')).filter(isPublished).sort(byTitle);
 }
 export async function getHeroes() {
-  return (await getCollection('heroes')).filter(isPublished);
+  return (await getCollection('heroes')).filter(isPublished).sort(byTitle);
 }
 
 /** id героя — «<work>/<hero>»: з шляху файлу heroes/<work>/<hero>.md */
@@ -47,7 +51,7 @@ export function essaysOfSubject(
 }
 
 export async function getAuthors() {
-  return (await getCollection('authors')).filter(isPublished);
+  return (await getCollection('authors')).filter(isPublished).sort(byTitle);
 }
 
 /** Множина slug-ів творів, до яких уже є сторінка (щоб каталог знав, що лінкувати). */
