@@ -1,0 +1,28 @@
+// Worker сайту literatura.halyavka.net (переїзд з Netlify 21.11.2026; так само влаштований lab.halyavka.net).
+// Викладка — Workers Builds (Cloudflare сам збирає репо при push у main: `npm run build` → `npx wrangler deploy`).
+// Гілки й PR збираються як версії з адресою попереднього перегляду на *.workers.dev і бойовий сайт не чіпають.
+// Домен literatura.halyavka.net підключається в панелі (Worker → Settings → Domains & Routes → Custom domain),
+// тому "routes" сюди не вписувати.
+// account_id — акаунт сайтів ГДЗ (Ztrmnn@…, Workers Paid).
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "literatura-halyavka",
+  "account_id": "016884b36b0f6f68649f04bf2d661fc8",
+  "main": "worker/index.ts",
+  "compatibility_date": "2026-10-01",
+  "assets": {
+    "directory": "./dist",
+    "binding": "ASSETS",
+    // /tvory/ → dist/tvory/index.html (trailingSlash: 'always' в astro.config.mjs)
+    "html_handling": "auto-trailing-slash",
+    // Адреса без файлу → dist/404.html (src/pages/404.astro) з кодом 404.
+    "not_found_handling": "404-page",
+    // Код першим на все, крім /_astro/*: статика сама віддала б 307 замість 301 для /tvory і /tvory/index.html
+    // і не звела б /TVORY/ до нижнього регістру (Netlify віддавав такі адреси як 200 — дублі; тепер 301 на канонічну).
+    "run_worker_first": ["/*", "!/_astro/*"]
+  },
+  // Поки сайт перевіряється на literatura-halyavka.<акаунт>.workers.dev; після перемикання домену можна вимкнути.
+  "workers_dev": true,
+  "preview_urls": true,
+  "observability": { "enabled": true }
+}

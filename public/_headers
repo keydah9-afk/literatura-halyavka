@@ -1,0 +1,8 @@
+# Заголовки статики Cloudflare Workers (сам файл у видачу не потрапляє).
+# HSTS — як надсилав Netlify.
+/*
+  Strict-Transport-Security: max-age=31536000
+
+# Файли Astro з хешем в імені не змінюються — хай браузер тримає їх рік (як було в netlify.toml).
+/_astro/*
+  Cache-Control: public, max-age=31536000, immutable
