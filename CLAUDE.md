@@ -1,12 +1,17 @@
 # literatura.halyavka.net — українська і зарубіжна література 5–11 клас
 
-Піддомен halyavka.net. Astro 5 (SSG) + Tailwind 4 + Content Collections. Деплой — Netlify (`netlify.toml`).
+Піддомен halyavka.net. Astro 5 (SSG) + Tailwind 4 + Content Collections. Деплой — Cloudflare Workers
+(static assets, `wrangler.jsonc` + `worker/index.ts`), з 21.11.2026; до того був Netlify.
 
-**Деплой:** репозиторій `keydah9-afk/literatura-halyavka` (гілка `main`) → Netlify-сайт
-`literatura-halyavka.netlify.app` → домен `literatura.halyavka.net`.
-DNS домену halyavka.net — у Cloudflare: запис `CNAME literatura → literatura-halyavka.netlify.app`,
-режим **DNS only** (сіра хмарка). З оранжевою Netlify не випустить сертифікат Let's Encrypt,
-а при Cloudflare SSL = Flexible ще й з'явиться редирект-петля.
+**Деплой:** репозиторій `keydah9-afk/literatura-halyavka` (гілка `main`) → Worker `literatura-halyavka`
+(акаунт Cloudflare сайтів ГДЗ, Workers Paid). Викладку робить **Workers Builds**: push у `main` —
+одразу бойова викладка (`npm run build` → `npx wrangler deploy`), гілки й PR — попередній перегляд
+на `*-literatura-halyavka.ztrmnn.workers.dev`. Домен `literatura.halyavka.net` — custom domain воркера.
+- Код воркера дає 301 для `/x` і `/x/index.html` → `/x/` і для великих літер → нижній регістр,
+  404 зі сторінкою `404.astro`, а файли `*.html` (підтвердження Search Console) віддає як є. Заголовки — `public/_headers`.
+- Netlify-проєкт `literatura-halyavka` не видалено, збірки в ньому зупинені; `netlify.toml` лишається для відкату,
+  а `literatura-halyavka.netlify.app` і далі переадресовує на основний домен.
+- Локальна перевірка воркера: `npm run build && npx wrangler dev`.
 
 - Запуск: `npm run dev` (порт 4330, див. `.claude/launch.json`). Білд: `npm run build`.
 - Бренд той самий, що в halyavka.net: червоний `#C1121F`, темно-синій `#003049`, кремовий `#FDF0D5`.

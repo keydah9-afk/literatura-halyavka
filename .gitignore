@@ -6,3 +6,6 @@ dist/
 .env.production
 .netlify/
 prompts/
+
+# Локальні файли wrangler dev
+.wrangler/
